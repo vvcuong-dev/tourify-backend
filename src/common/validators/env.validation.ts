@@ -1,4 +1,3 @@
-// src/configs/env.validation.ts
 import { plainToInstance } from 'class-transformer';
 import { IsEnum, IsInt, IsString, Min, validateSync } from 'class-validator';
 
@@ -18,6 +17,18 @@ class EnvironmentVariables {
 
   @IsString()
   DATABASE_URL!: string;
+
+  @IsString()
+  JWT_ACCESS_SECRET!: string;
+
+  @IsString()
+  JWT_REFRESH_SECRET!: string;
+
+  @IsString()
+  JWT_ACCESS_EXPIRES_IN!: string;
+
+  @IsString()
+  JWT_REFRESH_EXPIRES_IN!: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {
