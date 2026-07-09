@@ -2,12 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
-import { hashPassword } from '../../utils/password.util';
+import { comparePassword, hashPassword } from '../../utils/password.util';
 import { UserStatus } from '../../generated/prisma/browser';
+import { LoginDto } from './dto/login.dto';
+import { TokenService } from '../token/token.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tokenService: TokenService,
+  ) {}
 
   async register(dto: RegisterDto) {
     const existingUser = await this.prisma.user.findUnique({
@@ -32,5 +37,36 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
     return result;
+  }
+
+  async login(dto: LoginDto) {
+    const user = await this.prisma.user.findFirst({
+      where: { email: dto.email },
+    });
+
+    const isValidPassword =
+      user && (await comparePassword(dto.password, user.password));
+
+    if (!isValidPassword) {
+      throw new Error(TOURIFY_ERROR_CODES.AUTH.INVALID_CREDENTIALS);
+    }
+
+    if (user.status !== UserStatus.ACTIVE) {
+      throw new Error(TOURIFY_ERROR_CODES.AUTH.ACCOUNT_NOT_ACTIVE);
+    }
+
+    const accessToken = this.tokenService.generateAccessToken({
+      sub: user.id,
+      email: user.email,
+    });
+
+    const refreshToken = this.tokenService.generateRefreshToken({
+      sub: user.id,
+      email: user.email,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = user;
+    return { ...result, accessToken, refreshToken };
   }
 }

@@ -2,9 +2,11 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { appConfig } from './configs/app.config';
-import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
-import { ValidationError } from '@nestjs/common/interfaces/external/validation-error.interface';
-import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
+import {
+  ValidationPipe,
+  BadRequestException,
+  ValidationError,
+} from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
