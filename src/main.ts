@@ -1,12 +1,14 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { appConfig } from './configs/app.config';
 import {
   ValidationPipe,
   BadRequestException,
   ValidationError,
+  HttpStatus,
 } from '@nestjs/common';
+import { AppModule } from './app.module';
+import { appConfig } from './configs/app.config';
+import { TOURIFY_ERROR_CODES } from './constants/error-code.constant';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,11 +22,17 @@ async function bootstrap() {
       transform: true,
       stopAtFirstError: true,
       exceptionFactory: (validationErrors: ValidationError[] = []) => {
-        return new BadRequestException(
-          validationErrors.map((error) => ({
-            [error.property]: Object.values(error.constraints || {})[0],
-          })),
-        );
+        const errors = validationErrors.map((error) => ({
+          field: error.property,
+          errorCode: Object.values(error.constraints || {})[0],
+        }));
+
+        return new BadRequestException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          errorCode: TOURIFY_ERROR_CODES.COMMON.VALIDATION_ERROR,
+          message: TOURIFY_ERROR_CODES.COMMON.VALIDATION_ERROR,
+          errors,
+        });
       },
     }),
   );

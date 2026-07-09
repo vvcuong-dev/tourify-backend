@@ -7,12 +7,14 @@ import {
 
 import { TOURIFY_ERROR_CODES } from '../../../constants/error-code.constant';
 
+const { USER } = TOURIFY_ERROR_CODES;
+
 export class LoginDto {
-  @IsEmail({}, { message: TOURIFY_ERROR_CODES.USER.EMAIL_INVALID })
-  @IsNotEmpty({ message: TOURIFY_ERROR_CODES.USER.EMAIL_REQUIRED })
+  @IsEmail({}, { message: USER.EMAIL_INVALID })
+  @IsNotEmpty({ message: USER.EMAIL_REQUIRED })
   email!: string;
 
-  @MaxLength(72, { message: TOURIFY_ERROR_CODES.USER.PASSWORD_TOO_LONG })
+  @MaxLength(72, { message: USER.PASSWORD_TOO_LONG })
   @IsStrongPassword(
     {
       minLength: 8,
@@ -21,8 +23,8 @@ export class LoginDto {
       minNumbers: 1,
       minSymbols: 1,
     },
-    { message: TOURIFY_ERROR_CODES.USER.PASSWORD_TOO_WEAK },
+    { message: USER.PASSWORD_TOO_WEAK },
   )
-  @IsNotEmpty({ message: TOURIFY_ERROR_CODES.USER.PASSWORD_REQUIRED })
+  @IsNotEmpty({ message: USER.PASSWORD_REQUIRED })
   password!: string;
 }

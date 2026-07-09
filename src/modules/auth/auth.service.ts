@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
@@ -6,6 +6,7 @@ import { comparePassword, hashPassword } from '../../utils/password.util';
 import { UserStatus } from '../../generated/prisma/browser';
 import { LoginDto } from './dto/login.dto';
 import { TokenService } from '../token/token.service';
+import { AppException } from '../../common/exceptions/app.exception';
 
 @Injectable()
 export class AuthService {
@@ -48,11 +49,17 @@ export class AuthService {
       user && (await comparePassword(dto.password, user.password));
 
     if (!isValidPassword) {
-      throw new Error(TOURIFY_ERROR_CODES.AUTH.INVALID_CREDENTIALS);
+      throw new AppException(
+        TOURIFY_ERROR_CODES.AUTH.INVALID_CREDENTIALS,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     if (user.status !== UserStatus.ACTIVE) {
-      throw new Error(TOURIFY_ERROR_CODES.AUTH.ACCOUNT_NOT_ACTIVE);
+      throw new AppException(
+        TOURIFY_ERROR_CODES.AUTH.ACCOUNT_NOT_ACTIVE,
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     const accessToken = this.tokenService.generateAccessToken({
