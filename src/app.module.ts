@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './modules/user/user.module';
 import { TokenModule } from './modules/token/token.module';
 import { RedisModule } from './modules/redis/redis.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RedisModule } from './modules/redis/redis.module';
     UserModule,
     TokenModule,
     RedisModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
