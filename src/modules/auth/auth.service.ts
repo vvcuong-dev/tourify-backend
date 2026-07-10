@@ -7,6 +7,7 @@ import { UserStatus } from '../../generated/prisma/browser';
 import { LoginDto } from './dto/login.dto';
 import { TokenService } from '../token/token.service';
 import { AppException } from '../../exceptions/app.exception';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -75,5 +76,38 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
     return { ...result, accessToken, refreshToken };
+  }
+
+  async changePassword(
+    userId: number,
+    dto: ChangePasswordDto,
+  ): Promise<boolean> {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.USER.USER_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const isMatch = await comparePassword(dto.oldPassword, user.password);
+    if (!isMatch) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.AUTH.OLD_PASSWORD_INCORRECT,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const hashedNewPassword = await hashPassword(dto.newPassword);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword },
+    });
+
+    return true;
   }
 }
