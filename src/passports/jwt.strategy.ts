@@ -7,7 +7,7 @@ import { UserService } from '../modules/user/user.service';
 import { jwtConfig } from '../configs/jwt.config';
 import { JwtPayload } from '../modules/token/type/jwt-payload.type';
 import { UserStatus } from '../generated/prisma/browser';
-import { AppException } from '../common/exceptions/app.exception';
+import { AppException } from '../exceptions/app.exception';
 import { TOURIFY_ERROR_CODES } from '../constants/error-code.constant';
 
 @Injectable()

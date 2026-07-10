@@ -6,7 +6,7 @@ import { comparePassword, hashPassword } from '../../utils/password.util';
 import { UserStatus } from '../../generated/prisma/browser';
 import { LoginDto } from './dto/login.dto';
 import { TokenService } from '../token/token.service';
-import { AppException } from '../../common/exceptions/app.exception';
+import { AppException } from '../../exceptions/app.exception';
 
 @Injectable()
 export class AuthService {
