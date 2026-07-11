@@ -14,6 +14,7 @@ import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import type { RequestWithUser } from '../../common/types/request-with-user.type';
+import { ChangeEmailDto } from './dto/change-email.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -39,7 +40,12 @@ export class AuthController {
     @Body() dto: ChangePasswordDto,
     @Req() req: RequestWithUser,
   ) {
-    await this.authService.changePassword(req.user.id, dto);
-    return { message: 'Password changed successfully' };
+    return await this.authService.changePassword(req.user.id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('change-email')
+  async changeEmail(@Body() dto: ChangeEmailDto, @Req() req: RequestWithUser) {
+    return await this.authService.changeEmail(req.user.id, dto);
   }
 }

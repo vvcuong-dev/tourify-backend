@@ -8,6 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { TokenService } from '../token/token.service';
 import { AppException } from '../../exceptions/app.exception';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ChangeEmailDto } from './dto/change-email.dto';
 
 @Injectable()
 export class AuthService {
@@ -106,6 +107,51 @@ export class AuthService {
     await this.prisma.user.update({
       where: { id: userId },
       data: { password: hashedNewPassword },
+    });
+
+    return true;
+  }
+
+  async changeEmail(userId: number, dto: ChangeEmailDto): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.USER.USER_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const isMatch = await comparePassword(dto.password, user.password);
+    if (!isMatch) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.AUTH.PASSWORD_INCORRECT,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (dto.newEmail === user.email) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.USER.EMAIL_SAME_AS_OLD,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.newEmail },
+    });
+    if (existing) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.USER.EMAIL_ALREADY_EXISTS,
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { email: dto.newEmail },
     });
 
     return true;
