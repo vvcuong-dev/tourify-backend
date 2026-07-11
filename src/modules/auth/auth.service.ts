@@ -12,6 +12,13 @@ import { ChangeEmailDto } from './dto/change-email.dto';
 import { LoginResponse } from './response/login.response';
 import { UserResponse } from '../../common/responses/user.response';
 import { UserService } from '../user/user.service';
+import { RedisService } from '../redis/redis.service';
+import { CACHE, TTL } from '../../constants/cache.constant';
+import { JwtPayload } from './type/jwt-payload.type';
+import { TokenPairResponse } from '../../common/responses/token-pair.response';
+import { RefreshTokenResponse } from './response/refresh-token.response';
+import { CacheService } from '../redis/cache.service';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
 export class AuthService {
@@ -19,7 +26,13 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly tokenService: TokenService,
     private readonly userService: UserService,
+    private readonly redisService: RedisService,
+    private readonly cacheService: CacheService,
   ) {}
+
+  private get redis() {
+    return this.redisService.getClient();
+  }
 
   async register(dto: RegisterDto): Promise<UserResponse> {
     const existingUser = await this.prisma.user.findUnique({
@@ -66,23 +79,91 @@ export class AuthService {
       );
     }
 
-    const accessToken = this.tokenService.generateAccessToken({
+    const { token: accessToken } = this.tokenService.generateAccessToken({
       sub: user.id,
       email: user.email,
     });
 
-    const refreshToken = this.tokenService.generateRefreshToken({
-      sub: user.id,
-      email: user.email,
-    });
+    const { token: refreshToken, jti: refreshJti } =
+      this.tokenService.generateRefreshToken({
+        sub: user.id,
+        email: user.email,
+      });
 
+    await this.redis.set(
+      CACHE.AUTH._KEY.REFRESH_TOKEN(user.id, refreshJti),
+      refreshToken,
+      {
+        EX: TTL.WEEK, // 7 days
+      },
+    );
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
 
     return new LoginResponse({
       user: new UserResponse(result),
-      accessToken: accessToken.token,
-      refreshToken: refreshToken.token,
+      tokens: new TokenPairResponse({ accessToken, refreshToken }),
+    });
+  }
+
+  async refreshToken(token: RefreshTokenDto): Promise<RefreshTokenResponse> {
+    let decoded: JwtPayload;
+    try {
+      decoded = this.tokenService.verifyRefreshToken(token.refreshToken);
+    } catch {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.AUTH.INVALID_REFRESH_TOKEN,
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    if (!decoded.jti) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.AUTH.INVALID_REFRESH_TOKEN,
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const oldKey = CACHE.AUTH._KEY.REFRESH_TOKEN(decoded.sub, decoded.jti);
+    const exists = await this.redis.get(oldKey);
+    if (!exists) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.AUTH.INVALID_REFRESH_TOKEN,
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    await this.cacheService.delete(oldKey);
+    const user = await this.userService.findById(decoded.sub);
+    if (!user) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.USER.USER_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const { token: newAccessToken } = this.tokenService.generateAccessToken({
+      sub: user.id,
+      email: user.email,
+    });
+
+    const { token: newRefreshToken, jti: newJti } =
+      this.tokenService.generateRefreshToken({
+        sub: user.id,
+        email: user.email,
+      });
+
+    await this.redis.set(
+      CACHE.AUTH._KEY.REFRESH_TOKEN(user.id, newJti),
+      newRefreshToken,
+      {
+        EX: TTL.WEEK, // 7 days
+      },
+    );
+
+    return new RefreshTokenResponse({
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
     });
   }
 
@@ -90,9 +171,7 @@ export class AuthService {
     userId: number,
     dto: ChangePasswordDto,
   ): Promise<boolean> {
-    const user = await this.prisma.user.findFirst({
-      where: { id: userId },
-    });
+    const user = await this.userService.findById(userId);
 
     if (!user) {
       throw new AppException(
@@ -156,6 +235,37 @@ export class AuthService {
       where: { id: userId },
       data: { email: dto.newEmail },
     });
+
+    return true;
+  }
+  async logout(userId: number, accessToken: string): Promise<boolean> {
+    const decoded = this.tokenService.decode(accessToken);
+    if (!decoded.jti || !decoded.exp) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.AUTH.INVALID_ACCESS_TOKEN,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const ttlRemaining = decoded.exp - Math.floor(Date.now() / 1000);
+    if (ttlRemaining <= 0) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.AUTH.INVALID_ACCESS_TOKEN,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Add the access token's jti to the blacklist with the remaining TTL
+    await this.redis.set(
+      CACHE.AUTH._KEY.BLACKLIST(decoded.jti),
+      String(userId),
+      { EX: ttlRemaining },
+    );
+
+    // Invalidate all refresh tokens for the user
+    await this.cacheService.deleteByPattern(
+      CACHE.AUTH._PATTERN.ALL_REFRESH_TOKENS(userId),
+    );
 
     return true;
   }

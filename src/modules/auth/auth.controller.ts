@@ -15,6 +15,9 @@ import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import type { RequestWithUser } from '../../common/types/request-with-user.type';
 import { ChangeEmailDto } from './dto/change-email.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
+import { AppException } from '../../exceptions/app.exception';
 
 @Controller('auth')
 export class AuthController {
@@ -31,6 +34,27 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
     const result = await this.authService.login(dto);
+    return result;
+  }
+
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  async refreshToken(@Body() dto: RefreshTokenDto) {
+    const result = await this.authService.refreshToken(dto);
+    return result;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@Req() req: RequestWithUser) {
+    const accessToken = req.headers.authorization?.split(' ')[1];
+    if (!accessToken) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.AUTH.INVALID_ACCESS_TOKEN,
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    const result = await this.authService.logout(req.user.id, accessToken);
     return result;
   }
 
