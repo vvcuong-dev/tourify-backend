@@ -36,5 +36,9 @@ export const CACHE = {
       BLACKLIST: (jti: string) =>
         `${PREFIX}:${GLOBAL_VER}:auth:${CACHE.AUTH._VER}:blacklist:jti_${jti}`,
     },
+    _PATTERN: {
+      ALL_REFRESH_TOKENS: (userId: number) =>
+        `${PREFIX}:${GLOBAL_VER}:auth:${CACHE.AUTH._VER}:refresh:id_${userId}:jti_*`,
+    },
   },
 };
