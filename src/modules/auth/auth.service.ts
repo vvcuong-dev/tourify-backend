@@ -9,21 +9,28 @@ import { TokenService } from '../token/token.service';
 import { AppException } from '../../exceptions/app.exception';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ChangeEmailDto } from './dto/change-email.dto';
+import { LoginResponse } from './response/login.response';
+import { UserResponse } from '../../common/responses/user.response';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokenService: TokenService,
+    private readonly userService: UserService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<UserResponse> {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
 
     if (existingUser) {
-      throw new Error(TOURIFY_ERROR_CODES.USER.EMAIL_ALREADY_EXISTS);
+      throw new AppException(
+        TOURIFY_ERROR_CODES.USER.EMAIL_ALREADY_EXISTS,
+        HttpStatus.CONFLICT,
+      );
     }
 
     const hashedPassword = await hashPassword(dto.password);
@@ -36,16 +43,11 @@ export class AuthService {
         status: UserStatus.PENDING,
       },
     });
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...result } = user;
-    return result;
+    return new UserResponse(user);
   }
 
-  async login(dto: LoginDto) {
-    const user = await this.prisma.user.findFirst({
-      where: { email: dto.email },
-    });
+  async login(dto: LoginDto): Promise<LoginResponse> {
+    const user = await this.userService.findByEmail(dto.email);
 
     const isValidPassword =
       user && (await comparePassword(dto.password, user.password));
@@ -76,7 +78,12 @@ export class AuthService {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
-    return { ...result, accessToken, refreshToken };
+
+    return new LoginResponse({
+      user: new UserResponse(result),
+      accessToken: accessToken.token,
+      refreshToken: refreshToken.token,
+    });
   }
 
   async changePassword(
@@ -113,9 +120,7 @@ export class AuthService {
   }
 
   async changeEmail(userId: number, dto: ChangeEmailDto): Promise<boolean> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
+    const user = await this.userService.findById(userId);
 
     if (!user) {
       throw new AppException(
@@ -139,9 +144,7 @@ export class AuthService {
       );
     }
 
-    const existing = await this.prisma.user.findUnique({
-      where: { email: dto.newEmail },
-    });
+    const existing = await this.userService.findByEmail(dto.newEmail);
     if (existing) {
       throw new AppException(
         TOURIFY_ERROR_CODES.USER.EMAIL_ALREADY_EXISTS,

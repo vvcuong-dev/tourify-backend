@@ -6,6 +6,8 @@ import { AppException } from '../../exceptions/app.exception';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CLOUDINARY_FOLDERS } from '../../constants/cloudinary.constant';
 import { Logger } from '@nestjs/common';
+import { User } from '../../generated/prisma/browser';
+import { UserResponse } from '../../common/responses/user.response';
 
 @Injectable()
 export class UserService {
@@ -15,21 +17,24 @@ export class UserService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async findById(id: number) {
+  async findById(id: number): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
     return user;
   }
 
-  async findByEmail(email: string) {
+  async findByEmail(email: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
     return user;
   }
 
-  async updateProfile(userId: number, dto: UpdateProfileDto) {
+  async updateProfile(
+    userId: number,
+    dto: UpdateProfileDto,
+  ): Promise<UserResponse> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw new AppException(
@@ -43,12 +48,13 @@ export class UserService {
       data: dto,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...result } = updatedUser;
-    return result;
+    return new UserResponse(updatedUser);
   }
 
-  async updateAvatar(userId: number, file: Express.Multer.File) {
+  async updateAvatar(
+    userId: number,
+    file: Express.Multer.File,
+  ): Promise<UserResponse> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw new AppException(
@@ -80,6 +86,6 @@ export class UserService {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = upload;
-    return result;
+    return new UserResponse(result);
   }
 }

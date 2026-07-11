@@ -1,24 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from '../../common/types/jwt-payload.type';
+import { GeneratedToken, JwtPayload } from '../auth/type/jwt-payload.type';
 import { jwtConfig } from '../../configs/jwt.config';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class TokenService {
   constructor(private jwtService: JwtService) {}
 
-  generateAccessToken(payload: JwtPayload): string {
-    return this.jwtService.sign(payload, {
-      secret: jwtConfig.accessSecret,
-      expiresIn: jwtConfig.accessExpiresIn,
-    });
+  generateAccessToken(payload: Omit<JwtPayload, 'jti'>): GeneratedToken {
+    const jti = randomUUID();
+    const token = this.jwtService.sign(
+      { ...payload, jti },
+      {
+        secret: jwtConfig.accessSecret,
+        expiresIn: jwtConfig.accessExpiresIn,
+      },
+    );
+    return { token, jti };
   }
 
-  generateRefreshToken(payload: JwtPayload): string {
-    return this.jwtService.sign(payload, {
-      secret: jwtConfig.refreshSecret,
-      expiresIn: jwtConfig.refreshExpiresIn,
-    });
+  generateRefreshToken(payload: Omit<JwtPayload, 'jti'>): GeneratedToken {
+    const jti = randomUUID();
+
+    const token = this.jwtService.sign(
+      { ...payload, jti },
+      {
+        secret: jwtConfig.refreshSecret,
+        expiresIn: jwtConfig.refreshExpiresIn,
+      },
+    );
+    return { token, jti };
   }
 
   verifyAccessToken(token: string): JwtPayload {

@@ -3,3 +3,8 @@ export interface JwtPayload {
   email: string;
   jti?: string;
 }
+
+export interface GeneratedToken {
+  token: string;
+  jti: string;
+}

@@ -28,4 +28,13 @@ export const CACHE = {
       LIST: () => [`${PREFIX}:user-list`],
     },
   },
+  AUTH: {
+    _VER: 'v1',
+    _KEY: {
+      REFRESH_TOKEN: (userId: number, jti: string) =>
+        `${PREFIX}:${GLOBAL_VER}:auth:${CACHE.AUTH._VER}:refresh:id_${userId}:jti_${jti}`,
+      BLACKLIST: (jti: string) =>
+        `${PREFIX}:${GLOBAL_VER}:auth:${CACHE.AUTH._VER}:blacklist:jti_${jti}`,
+    },
+  },
 };

@@ -5,7 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { HttpStatus } from '@nestjs/common';
 import { UserService } from '../modules/user/user.service';
 import { jwtConfig } from '../configs/jwt.config';
-import { JwtPayload } from '../common/types/jwt-payload.type';
+import { JwtPayload } from '../modules/auth/type/jwt-payload.type';
 import { UserStatus } from '../generated/prisma/browser';
 import { AppException } from '../exceptions/app.exception';
 import { TOURIFY_ERROR_CODES } from '../constants/error-code.constant';
