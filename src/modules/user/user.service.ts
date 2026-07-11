@@ -9,11 +9,11 @@ import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
-  private readonly logger = new Logger(UserService.name);
 
   async findByEmail(email: string) {
     const user = await this.prisma.user.findUnique({
@@ -65,7 +65,7 @@ export class UserService {
 
     if (user.avatarPublicId) {
       await this.cloudinaryService
-        .deleteImage(user.avatarPublicId as string)
+        .deleteImage(user.avatarPublicId)
         .catch((error: Error) => {
           this.logger.error(`Failed to delete old avatar: ${error.message}`);
         });
