@@ -1,14 +1,20 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CategoryResponse } from '../../common/types/category.response';
 import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
 import { AppException } from '../../exceptions/app.exception';
 import { generateUniqueSlug } from '../../utils/slug.util';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { CLOUDINARY_FOLDERS } from '../../constants/cloudinary.constant';
 
 @Injectable()
 export class CategoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(CategoryService.name);
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   async create(
     dto: CreateCategoryDto,
@@ -57,5 +63,46 @@ export class CategoryService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async updateImage(
+    id: number,
+    file: Express.Multer.File,
+  ): Promise<CategoryResponse> {
+    const category = await this.prisma.category.findFirst({
+      where: { id: id, deleted: false },
+    });
+
+    if (!category) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.CATEGORY.NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const uploaded = await this.cloudinaryService.uploadImage(
+      file,
+      CLOUDINARY_FOLDERS.CATEGORIES,
+    );
+
+    const updated = await this.prisma.category.update({
+      where: { id: id },
+      data: {
+        avatar: uploaded.secure_url,
+        avatarPublicId: uploaded.public_id,
+      },
+    });
+
+    if (category.avatarPublicId) {
+      await this.cloudinaryService
+        .deleteImage(category.avatarPublicId as string)
+        .catch((error: Error) => {
+          this.logger.error(
+            `Failed to delete old category avatar: ${error.message}`,
+          );
+        });
+    }
+
+    return new CategoryResponse(updated);
   }
 }
