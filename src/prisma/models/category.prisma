@@ -1,0 +1,21 @@
+model Category {
+    id             Int            @id @default(autoincrement())
+    name           String
+    slug           String         @unique
+    parentId       Int?           @map("parent_id")
+    parent         Category?      @relation("CategoryToCategory", fields: [parentId], references: [id])
+    children       Category[]     @relation("CategoryToCategory")
+    position       Int
+    status         CategoryStatus @default(ACTIVE)
+    avatar         String?
+    avatarPublicId String?        @map("avatar_public_id")
+    description    String?
+
+    createdBy Int?     @map("created_by")
+    updatedBy Int?     @map("updated_by")
+    deleted   Boolean  @default(false)
+    createdAt DateTime @default(now()) @map("created_at") @db.Timestamp
+    updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp()
+
+    @@map("categories")
+}

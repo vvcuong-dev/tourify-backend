@@ -9,6 +9,7 @@ import { UserModule } from './modules/user/user.module';
 import { TokenModule } from './modules/token/token.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { CategoryModule } from './modules/category/category.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
     TokenModule,
     RedisModule,
     CloudinaryModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
