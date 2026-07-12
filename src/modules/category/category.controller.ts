@@ -38,7 +38,7 @@ export class CategoryController {
       createImageUploadOptions(UPLOAD_LIMITS.CATEGORY_IMAGE),
     ),
   )
-  uploadAvatar(
+  uploadImage(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: Express.Multer.File,
   ) {
