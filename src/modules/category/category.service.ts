@@ -7,6 +7,7 @@ import { AppException } from '../../exceptions/app.exception';
 import { generateUniqueSlug } from '../../utils/slug.util';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CLOUDINARY_FOLDERS } from '../../constants/cloudinary.constant';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
 export class CategoryService {
@@ -75,7 +76,7 @@ export class CategoryService {
 
     if (!category) {
       throw new AppException(
-        TOURIFY_ERROR_CODES.CATEGORY.NOT_FOUND,
+        TOURIFY_ERROR_CODES.CATEGORY.CATEGORY_NOT_FOUND,
         HttpStatus.NOT_FOUND,
       );
     }
@@ -102,6 +103,59 @@ export class CategoryService {
           );
         });
     }
+
+    return new CategoryResponse(updated);
+  }
+
+  async update(
+    id: number,
+    dto: UpdateCategoryDto,
+    userId: number,
+  ): Promise<CategoryResponse> {
+    const category = await this.prisma.category.findFirst({
+      where: { id: id, deleted: false },
+    });
+
+    if (!category) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.CATEGORY.CATEGORY_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    if (dto.parentId === id) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.CATEGORY.INVALID_PARENT,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (dto.parentId) {
+      const parent = await this.prisma.category.findUnique({
+        where: { id: dto.parentId, deleted: false },
+      });
+
+      if (!parent) {
+        throw new AppException(
+          TOURIFY_ERROR_CODES.CATEGORY.PARENT_NOT_FOUND,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
+    let slug: string | undefined;
+    if (dto.name && dto.name !== category.name) {
+      slug = await generateUniqueSlug(this.prisma.category, dto.name);
+    }
+
+    const updated = await this.prisma.category.update({
+      where: { id: id },
+      data: {
+        ...dto,
+        slug: slug,
+        updatedBy: userId,
+      },
+    });
 
     return new CategoryResponse(updated);
   }
