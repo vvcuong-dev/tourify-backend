@@ -10,6 +10,8 @@ import {
   ParseIntPipe,
   Patch,
   Delete,
+  Query,
+  Get,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -20,17 +22,20 @@ import { createImageUploadOptions } from '../../utils/multer.util';
 import { UPLOAD_LIMITS } from '../../constants/upload.constant';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ChangeMultiCategoryDto } from './dto/change-multi-category.dto';
+import { QueryCategoryDto } from './dto/query-category.dto';
 
-@Controller('category')
+@Controller('categories')
 @UseGuards(JwtAuthGuard)
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
+  @Get()
+  findAll(@Query() query: QueryCategoryDto) {
+    return this.categoryService.findAll(query);
+  }
+
   @Post()
-  async createCategory(
-    @Body() dto: CreateCategoryDto,
-    @Req() req: RequestWithUser,
-  ) {
+  async create(@Body() dto: CreateCategoryDto, @Req() req: RequestWithUser) {
     const userId = req.user.id;
     return this.categoryService.create(dto, userId);
   }

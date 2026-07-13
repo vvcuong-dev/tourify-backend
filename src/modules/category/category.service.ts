@@ -1,16 +1,21 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
-import { CategoryResponse } from '../../common/types/category.response';
+import { CategoryResponse } from '../../common/responses/category.response';
 import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
 import { AppException } from '../../exceptions/app.exception';
-import { generateUniqueSlug } from '../../utils/slug.util';
+import { generateUniqueSlug, toSlug } from '../../utils/slug.util';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CLOUDINARY_FOLDERS } from '../../constants/cloudinary.constant';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ChangeMultiCategoryDto } from './dto/change-multi-category.dto';
 import { MultiAction } from '../../common/enums/multi-action.enum';
-import { CategoryStatus } from '../../generated/prisma/browser';
+import { CategoryStatus, Prisma } from '../../generated/prisma/browser';
+import { QueryCategoryDto } from './dto/query-category.dto';
+import {
+  PaginatedResponse,
+  PaginationMeta,
+} from '../../common/responses/paginated.response';
 
 @Injectable()
 export class CategoryService {
@@ -20,6 +25,57 @@ export class CategoryService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
+  async findAll(
+    query: QueryCategoryDto,
+  ): Promise<PaginatedResponse<CategoryResponse>> {
+    const where: Prisma.CategoryWhereInput = {
+      deleted: false,
+    };
+
+    if (query.status) {
+      where.status = query.status;
+    }
+
+    if (query.createdBy) {
+      where.createdBy = query.createdBy;
+    }
+
+    if (query.keyword) {
+      where.slug = { contains: toSlug(query.keyword) };
+    }
+
+    if (query.startDate || query.endDate) {
+      where.createdAt = {};
+      if (query.startDate) {
+        where.createdAt.gte = new Date(query.startDate);
+      }
+
+      if (query.endDate) {
+        const end = new Date(query.endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
+
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 3;
+
+    const [totalRecord, categories] = await Promise.all([
+      this.prisma.category.count({ where }),
+      this.prisma.category.findMany({
+        where,
+        orderBy: { position: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
+
+    const totalPage = Math.ceil(totalRecord / limit);
+    return new PaginatedResponse(
+      categories.map((c) => new CategoryResponse(c)),
+      new PaginationMeta({ page, limit, totalRecord, totalPage }),
+    );
+  }
   async create(
     dto: CreateCategoryDto,
     userId: number,
@@ -92,14 +148,14 @@ export class CategoryService {
     const updated = await this.prisma.category.update({
       where: { id: id },
       data: {
-        avatar: uploaded.secure_url,
-        avatarPublicId: uploaded.public_id,
+        image: uploaded.secure_url,
+        imagePublicId: uploaded.public_id,
       },
     });
 
-    if (category.avatarPublicId) {
+    if (category.imagePublicId) {
       await this.cloudinaryService
-        .deleteImage(category.avatarPublicId)
+        .deleteImage(category.imagePublicId as string)
         .catch((error: Error) => {
           this.logger.error(
             `Failed to delete old category avatar: ${error.message}`,

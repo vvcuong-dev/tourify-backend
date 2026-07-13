@@ -20,7 +20,7 @@ export class CategoryResponse {
   status!: string;
 
   @Expose()
-  avatar!: string | null;
+  image!: string | null;
 
   @Expose()
   description!: string | null;
