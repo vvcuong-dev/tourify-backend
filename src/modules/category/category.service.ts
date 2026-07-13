@@ -96,7 +96,7 @@ export class CategoryService {
 
     if (category.avatarPublicId) {
       await this.cloudinaryService
-        .deleteImage(category.avatarPublicId as string)
+        .deleteImage(category.avatarPublicId)
         .catch((error: Error) => {
           this.logger.error(
             `Failed to delete old category avatar: ${error.message}`,
@@ -158,5 +158,39 @@ export class CategoryService {
     });
 
     return new CategoryResponse(updated);
+  }
+
+  async softDelete(id: number, userId: number): Promise<boolean> {
+    const category = await this.prisma.category.findFirst({
+      where: { id: id, deleted: false },
+    });
+
+    if (!category) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.CATEGORY.CATEGORY_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const hasChildren = await this.prisma.category.findFirst({
+      where: { parentId: id, deleted: false },
+    });
+
+    if (hasChildren) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.CATEGORY.CATEGORY_HAS_CHILDREN,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.prisma.category.update({
+      where: { id: id },
+      data: {
+        deleted: true,
+        deletedBy: userId,
+      },
+    });
+
+    return true;
   }
 }

@@ -9,6 +9,7 @@ import {
   UploadedFile,
   ParseIntPipe,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -55,5 +56,11 @@ export class CategoryController {
   ) {
     const userId = req.user.id;
     return this.categoryService.update(id, dto, userId);
+  }
+
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+    const userId = req.user.id;
+    return this.categoryService.softDelete(id, userId);
   }
 }

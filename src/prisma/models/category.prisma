@@ -13,6 +13,7 @@ model Category {
 
     createdBy Int?     @map("created_by")
     updatedBy Int?     @map("updated_by")
+    deletedBy Int?     @map("deleted_by")
     deleted   Boolean  @default(false)
     createdAt DateTime @default(now()) @map("created_at") @db.Timestamp
     updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp()
