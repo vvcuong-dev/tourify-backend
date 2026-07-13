@@ -19,6 +19,7 @@ import { FileInterceptor } from '@nestjs/platform-express/multer/interceptors/fi
 import { createImageUploadOptions } from '../../utils/multer.util';
 import { UPLOAD_LIMITS } from '../../constants/upload.constant';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { ChangeMultiCategoryDto } from './dto/change-multi-category.dto';
 
 @Controller('category')
 @UseGuards(JwtAuthGuard)
@@ -46,6 +47,15 @@ export class CategoryController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.categoryService.updateImage(id, file);
+  }
+
+  @Patch('change-multi')
+  changeMulti(
+    @Body() dtos: ChangeMultiCategoryDto,
+    @Req() req: RequestWithUser,
+  ) {
+    const userId = req.user.id;
+    return this.categoryService.changeMulti(dtos, userId);
   }
 
   @Patch(':id')

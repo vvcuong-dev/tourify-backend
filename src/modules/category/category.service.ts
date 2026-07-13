@@ -8,6 +8,9 @@ import { generateUniqueSlug } from '../../utils/slug.util';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CLOUDINARY_FOLDERS } from '../../constants/cloudinary.constant';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { ChangeMultiCategoryDto } from './dto/change-multi-category.dto';
+import { MultiAction } from '../../common/enums/multi-action.enum';
+import { CategoryStatus } from '../../generated/prisma/browser';
 
 @Injectable()
 export class CategoryService {
@@ -191,6 +194,54 @@ export class CategoryService {
       },
     });
 
+    return true;
+  }
+
+  async changeMulti(
+    dto: ChangeMultiCategoryDto,
+    userId: number,
+  ): Promise<boolean> {
+    const { option, ids } = dto;
+
+    switch (option) {
+      case MultiAction.ACTIVE:
+      case MultiAction.INACTIVE:
+        await this.prisma.category.updateMany({
+          where: { id: { in: ids }, deleted: false },
+          data: {
+            status:
+              option === MultiAction.ACTIVE
+                ? CategoryStatus.ACTIVE
+                : CategoryStatus.INACTIVE,
+            updatedBy: userId,
+          },
+        });
+        break;
+      case MultiAction.DELETE: {
+        const orphanChild = await this.prisma.category.findFirst({
+          where: {
+            parentId: { in: ids },
+            deleted: false,
+            id: { notIn: ids },
+          },
+        });
+        if (orphanChild) {
+          throw new AppException(
+            TOURIFY_ERROR_CODES.CATEGORY.CATEGORY_HAS_CHILDREN,
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+
+        await this.prisma.category.updateMany({
+          where: { id: { in: ids }, deleted: false },
+          data: {
+            deleted: true,
+            deletedBy: userId,
+          },
+        });
+        break;
+      }
+    }
     return true;
   }
 }

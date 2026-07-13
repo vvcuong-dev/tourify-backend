@@ -39,5 +39,6 @@ export const TOURIFY_ERROR_CODES = {
   },
   COMMON: {
     VALIDATION_ERROR: 'VALIDATION_ERROR',
+    INVALID_OPTION: 'INVALID_OPTION',
   },
 } as const;
