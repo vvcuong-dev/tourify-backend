@@ -16,6 +16,7 @@ import {
   PaginatedResponse,
   PaginationMeta,
 } from '../../common/responses/paginated.response';
+import { buildCategoryTree } from '../../utils/category-tree.util';
 
 @Injectable()
 export class CategoryService {
@@ -76,6 +77,29 @@ export class CategoryService {
       new PaginationMeta({ page, limit, totalRecord, totalPage }),
     );
   }
+  async findTree(): Promise<CategoryResponse[]> {
+    const categories = await this.prisma.category.findMany({
+      where: { deleted: false },
+      orderBy: { position: 'asc' },
+    });
+
+    const responses: CategoryResponse[] = categories.map(
+      (c) => new CategoryResponse(c),
+    );
+
+    const tree = buildCategoryTree<CategoryResponse>(responses);
+
+    return this.mapTreeToResponse(tree);
+  }
+
+  private mapTreeToResponse(nodes: CategoryResponse[]): CategoryResponse[] {
+    return nodes.map((node) => {
+      const response = new CategoryResponse(node);
+      response.children = this.mapTreeToResponse(node.children ?? []);
+      return response;
+    });
+  }
+
   async create(
     dto: CreateCategoryDto,
     userId: number,

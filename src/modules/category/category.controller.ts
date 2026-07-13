@@ -34,6 +34,11 @@ export class CategoryController {
     return this.categoryService.findAll(query);
   }
 
+  @Get('tree')
+  findTree() {
+    return this.categoryService.findTree();
+  }
+
   @Post()
   async create(@Body() dto: CreateCategoryDto, @Req() req: RequestWithUser) {
     const userId = req.user.id;

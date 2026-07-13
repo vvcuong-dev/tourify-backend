@@ -1,4 +1,4 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 
 export class CategoryResponse {
   @Expose()
@@ -36,6 +36,10 @@ export class CategoryResponse {
 
   @Expose()
   updatedAt!: Date;
+
+  @Expose()
+  @Type(() => CategoryResponse)
+  children?: CategoryResponse[];
 
   constructor(partial: Partial<CategoryResponse>) {
     Object.assign(this, partial);
