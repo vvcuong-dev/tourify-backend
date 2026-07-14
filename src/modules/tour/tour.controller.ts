@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Param,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { TourService } from './tour.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
@@ -32,5 +33,13 @@ export class TourController {
     @Req() req: RequestWithUser,
   ) {
     return this.tourService.update(id, dto, req.user.id);
+  }
+
+  @Delete(':id')
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.tourService.remove(id, req.user.id);
   }
 }

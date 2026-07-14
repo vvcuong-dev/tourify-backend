@@ -174,4 +174,27 @@ export class TourService {
       );
     }
   }
+
+  async remove(id: number, userId: number): Promise<boolean> {
+    const tour = await this.prisma.tour.findFirst({
+      where: { id, deleted: false },
+    });
+
+    if (!tour) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.TOUR.TOUR_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    await this.prisma.tour.update({
+      where: { id },
+      data: {
+        deleted: true,
+        updatedBy: userId,
+      },
+    });
+
+    return true;
+  }
 }
