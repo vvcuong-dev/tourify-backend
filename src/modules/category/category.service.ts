@@ -228,7 +228,7 @@ export class CategoryService {
 
     let slug: string | undefined;
     if (dto.name && dto.name !== category.name) {
-      slug = await generateUniqueSlug(this.prisma.category, dto.name);
+      slug = await generateUniqueSlug(this.prisma.category, dto.name, id);
     }
 
     const updated = await this.prisma.category.update({

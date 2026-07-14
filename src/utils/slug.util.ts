@@ -6,19 +6,29 @@ export function toSlug(text: string): string {
 }
 
 interface SlugUniqueChecker {
-  findUnique: (args: { where: { slug: string } }) => Promise<unknown>;
+  findFirst: (args: {
+    where: { slug: string; id?: { not: number } };
+  }) => Promise<unknown>;
 }
 
 export async function generateUniqueSlug(
   delegate: SlugUniqueChecker,
   name: string,
+  excludeId?: number,
 ): Promise<string> {
   const baseSlug = toSlug(name);
 
   let slug = baseSlug;
   let count = 1;
 
-  while (await delegate.findUnique({ where: { slug } })) {
+  while (
+    await delegate.findFirst({
+      where: {
+        slug: slug,
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+    })
+  ) {
     slug = `${baseSlug}-${count}`;
     count++;
   }

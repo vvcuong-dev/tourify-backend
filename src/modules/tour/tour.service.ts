@@ -7,6 +7,7 @@ import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
 import { generateUniqueSlug } from '../../utils/slug.util';
 import { instanceToPlain } from 'class-transformer';
 import { Prisma } from '../../generated/prisma/browser';
+import { UpdateTourDto } from './dto/update-tour.dto';
 
 @Injectable()
 export class TourService {
@@ -80,6 +81,95 @@ export class TourService {
     } catch {
       throw new AppException(
         TOURIFY_ERROR_CODES.TOUR.CREATE_FAILED,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async update(
+    id: number,
+    dto: UpdateTourDto,
+    userId: number,
+  ): Promise<TourResponse> {
+    const tour = await this.prisma.tour.findFirst({
+      where: { id, deleted: false },
+    });
+    if (!tour) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.TOUR.TOUR_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    if (dto.categoryId) {
+      const category = await this.prisma.category.findFirst({
+        where: { id: dto.categoryId, deleted: false },
+      });
+      if (!category) {
+        throw new AppException(
+          TOURIFY_ERROR_CODES.TOUR.CATEGORY_NOT_FOUND,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
+    if (dto.cityIds?.length) {
+      const cityCount = await this.prisma.city.count({
+        where: { id: { in: dto.cityIds } },
+      });
+      if (cityCount !== dto.cityIds.length) {
+        throw new AppException(
+          TOURIFY_ERROR_CODES.TOUR.CITY_NOT_FOUND,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
+    // Chỉ regenerate slug nếu name thay đổi thật sự
+    let slug: string | undefined;
+    if (dto.name && dto.name !== tour.name) {
+      slug = await generateUniqueSlug(this.prisma.tour, dto.name, id);
+    }
+
+    const { cityIds, schedules, ...tourData } = dto;
+
+    try {
+      const updated = await this.prisma.$transaction(async (tx) => {
+        await tx.tour.update({
+          where: { id },
+          data: {
+            ...tourData,
+            ...(slug ? { slug } : {}),
+            schedules: schedules
+              ? (instanceToPlain(schedules) as Prisma.InputJsonValue)
+              : undefined,
+            updatedBy: userId,
+          },
+        });
+
+        // Nếu client gửi cityIds -> replace toàn bộ locations cũ
+        if (cityIds) {
+          await tx.tourLocation.deleteMany({ where: { tourId: id } });
+          if (cityIds.length) {
+            await tx.tourLocation.createMany({
+              data: cityIds.map((cityId) => ({ tourId: id, cityId })),
+            });
+          }
+        }
+
+        return tx.tour.findUniqueOrThrow({
+          where: { id },
+          include: {
+            locations: true,
+            images: { orderBy: { position: 'asc' } },
+          },
+        });
+      });
+
+      return new TourResponse(updated);
+    } catch {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.TOUR.TOUR_UPDATE_FAILED,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
