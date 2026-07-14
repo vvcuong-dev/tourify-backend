@@ -9,12 +9,13 @@ import {
 import { AppModule } from './app.module';
 import { appConfig } from './configs/app.config';
 import { TOURIFY_ERROR_CODES } from './constants/error-code.constant';
+import { MulterExceptionFilter } from './exceptions/multer.exception';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
-
+  app.useGlobalFilters(new MulterExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
