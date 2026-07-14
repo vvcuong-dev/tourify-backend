@@ -152,6 +152,7 @@ export class CategoryService {
   async updateImage(
     id: number,
     file: Express.Multer.File,
+    userId: number,
   ): Promise<CategoryResponse> {
     const category = await this.prisma.category.findFirst({
       where: { id: id, deleted: false },
@@ -174,6 +175,7 @@ export class CategoryService {
       data: {
         image: uploaded.secure_url,
         imagePublicId: uploaded.public_id,
+        updatedBy: userId,
       },
     });
 

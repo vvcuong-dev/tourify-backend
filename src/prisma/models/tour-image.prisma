@@ -2,10 +2,8 @@ model TourImage {
     id       Int     @id @default(autoincrement())
     url      String
     publicId String? @map("public_id")
-    position Int     @default(0)
-
-    tourId Int  @map("tour_id")
-    tour   Tour @relation(fields: [tourId], references: [id], onDelete: Cascade)
+    tourId   Int     @map("tour_id")
+    tour     Tour    @relation(fields: [tourId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now()) @map("created_at") @db.Timestamp
 

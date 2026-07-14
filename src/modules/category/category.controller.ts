@@ -55,8 +55,10 @@ export class CategoryController {
   uploadImage(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: Express.Multer.File,
+    @Req() req: RequestWithUser,
   ) {
-    return this.categoryService.updateImage(id, file);
+    const userId = req.user.id;
+    return this.categoryService.updateImage(id, file, userId);
   }
 
   @Patch('change-multi')

@@ -8,12 +8,19 @@ import {
   Param,
   Patch,
   Delete,
+  UseInterceptors,
+  UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import { TourService } from './tour.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { CreateTourDto } from './dto/create-tour.dto';
 import type { RequestWithUser } from '../../common/types/request-with-user.type';
 import { UpdateTourDto } from './dto/update-tour.dto';
+import { FileInterceptor } from '@nestjs/platform-express/multer/interceptors/file.interceptor';
+import { UPLOAD_LIMITS } from '../../constants/upload.constant';
+import { createImageUploadOptions } from '../../utils/multer.util';
+import { FilesInterceptor } from '@nestjs/platform-express/multer/interceptors/files.interceptor';
 
 @Controller('admin/tour')
 @UseGuards(JwtAuthGuard)
@@ -41,5 +48,40 @@ export class TourController {
     @Req() req: RequestWithUser,
   ) {
     return this.tourService.remove(id, req.user.id);
+  }
+
+  @Post(':id/avatar')
+  @UseInterceptors(
+    FileInterceptor('avatar', createImageUploadOptions(UPLOAD_LIMITS.AVATAR)),
+  )
+  async uploadAvatar(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.tourService.uploadAvatar(id, file, req.user.id);
+  }
+
+  @Post(':id/images')
+  @UseInterceptors(
+    FilesInterceptor(
+      'images',
+      UPLOAD_LIMITS.TOUR_IMAGES.maxFilesCount,
+      createImageUploadOptions(UPLOAD_LIMITS.TOUR_IMAGES),
+    ),
+  )
+  async uploadImages(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    return this.tourService.uploadImages(id, files);
+  }
+
+  @Delete(':id/images/:imageId')
+  async deleteImage(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('imageId', ParseIntPipe) imageId: number,
+  ) {
+    return this.tourService.deleteImage(id, imageId);
   }
 }

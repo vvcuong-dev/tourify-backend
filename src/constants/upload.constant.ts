@@ -4,7 +4,7 @@ export const UPLOAD_LIMITS = {
     maxFilesCount: 1,
     allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
   },
-  TOUR_IMAGE: {
+  TOUR_IMAGES: {
     maxSize: 8,
     maxFilesCount: 8,
     allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
