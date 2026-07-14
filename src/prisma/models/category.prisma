@@ -18,5 +18,7 @@ model Category {
     createdAt DateTime @default(now()) @map("created_at") @db.Timestamp
     updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp()
 
+    tours Tour[]
+
     @@map("categories")
 }

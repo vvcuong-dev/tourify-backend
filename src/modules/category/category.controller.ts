@@ -24,7 +24,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ChangeMultiCategoryDto } from './dto/change-multi-category.dto';
 import { QueryCategoryDto } from './dto/query-category.dto';
 
-@Controller('categories')
+@Controller('admin/categories')
 @UseGuards(JwtAuthGuard)
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}

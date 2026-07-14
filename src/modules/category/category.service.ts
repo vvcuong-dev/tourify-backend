@@ -179,7 +179,7 @@ export class CategoryService {
 
     if (category.imagePublicId) {
       await this.cloudinaryService
-        .deleteImage(category.imagePublicId as string)
+        .deleteImage(category.imagePublicId)
         .catch((error: Error) => {
           this.logger.error(
             `Failed to delete old category avatar: ${error.message}`,

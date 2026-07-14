@@ -17,7 +17,7 @@ import { createImageUploadOptions } from '../../utils/multer.util';
 import { FileInterceptor } from '@nestjs/platform-express/multer/interceptors/file.interceptor';
 import { UPLOAD_LIMITS } from '../../constants/upload.constant';
 
-@Controller('users')
+@Controller('admin/users')
 @UseGuards(JwtAuthGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}

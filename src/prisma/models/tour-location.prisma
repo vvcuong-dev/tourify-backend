@@ -1,0 +1,10 @@
+model TourLocation {
+    id     Int  @id @default(autoincrement())
+    tourId Int  @map("tour_id")
+    tour   Tour @relation(fields: [tourId], references: [id], onDelete: Cascade)
+    cityId Int  @map("city_id")
+    city   City @relation(fields: [cityId], references: [id])
+
+    @@unique([tourId, cityId])
+    @@map("tour_locations")
+}

@@ -1,0 +1,42 @@
+model Tour {
+    id         Int      @id @default(autoincrement())
+    name       String
+    slug       String   @unique
+    categoryId Int      @map("category_id")
+    category   Category @relation(fields: [categoryId], references: [id])
+
+    position Int
+    status   TourStatus @default(ACTIVE)
+
+    avatar         String?
+    avatarPublicId String?     @map("avatar_public_id")
+    images         TourImage[]
+
+    priceAdult       Int @default(0) @map("price_adult")
+    priceChildren    Int @default(0) @map("price_children")
+    priceBaby        Int @default(0) @map("price_baby")
+    priceNewAdult    Int @default(0) @map("price_new_adult")
+    priceNewChildren Int @default(0) @map("price_new_children")
+    priceNewBaby     Int @default(0) @map("price_new_baby")
+
+    stockAdult    Int @default(0) @map("stock_adult")
+    stockChildren Int @default(0) @map("stock_children")
+    stockBaby     Int @default(0) @map("stock_baby")
+
+    time          String?
+    vehicle       String?
+    departureDate DateTime? @map("departure_date")
+    information   String?
+
+    locations TourLocation[]
+    schedules Json?
+
+    createdBy Int?     @map("created_by")
+    updatedBy Int?     @map("updated_by")
+    deletedBy Int?     @map("deleted_by")
+    deleted   Boolean  @default(false)
+    createdAt DateTime @default(now()) @map("created_at") @db.Timestamp
+    updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp()
+
+    @@map("tours")
+}

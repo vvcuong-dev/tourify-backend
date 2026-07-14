@@ -10,6 +10,7 @@ import { TokenModule } from './modules/token/token.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { CategoryModule } from './modules/category/category.module';
+import { TourModule } from './modules/tour/tour.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CategoryModule } from './modules/category/category.module';
     RedisModule,
     CloudinaryModule,
     CategoryModule,
+    TourModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -19,7 +19,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
 import { AppException } from '../../exceptions/app.exception';
 
-@Controller('auth')
+@Controller('admin/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
