@@ -77,6 +77,22 @@ export class CategoryService {
       new PaginationMeta({ page, limit, totalRecord, totalPage }),
     );
   }
+
+  async findOne(id: number): Promise<CategoryResponse> {
+    const category = await this.prisma.category.findFirst({
+      where: { id: id, deleted: false },
+    });
+
+    if (!category) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.CATEGORY.CATEGORY_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return new CategoryResponse(category);
+  }
+
   async findTree(): Promise<CategoryResponse[]> {
     const categories = await this.prisma.category.findMany({
       where: { deleted: false },
