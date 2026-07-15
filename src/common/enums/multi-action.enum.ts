@@ -1,5 +1,5 @@
 export enum MultiAction {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  DELETE = 'delete',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  DELETE = 'DELETE',
 }

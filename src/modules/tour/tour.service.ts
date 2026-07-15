@@ -4,12 +4,19 @@ import { CreateTourDto } from './dto/create-tour.dto';
 import { TourResponse } from '../../common/responses/tour-response';
 import { AppException } from '../../exceptions/app.exception';
 import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
-import { generateUniqueSlug } from '../../utils/slug.util';
+import { generateUniqueSlug, toSlug } from '../../utils/slug.util';
 import { instanceToPlain } from 'class-transformer';
-import { Prisma } from '../../generated/prisma/browser';
+import { Prisma, TourStatus } from '../../generated/prisma/browser';
 import { UpdateTourDto } from './dto/update-tour.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CLOUDINARY_FOLDERS } from '../../constants/cloudinary.constant';
+import {
+  PaginatedResponse,
+  PaginationMeta,
+} from '../../common/responses/paginated.response';
+import { QueryTourDto } from './dto/query-tour.dto';
+import { MultiAction } from '../../common/enums/multi-action.enum';
+import { ChangeMultiTourDto } from './dto/change-multi-tour.dto';
 
 @Injectable()
 export class TourService {
@@ -19,6 +26,85 @@ export class TourService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
+  async findAll(query: QueryTourDto): Promise<PaginatedResponse<TourResponse>> {
+    const where: Prisma.TourWhereInput = {
+      deleted: false,
+    };
+
+    if (query.status) {
+      where.status = query.status;
+    }
+
+    if (query.categoryId) {
+      where.categoryId = query.categoryId;
+    }
+
+    if (query.createdBy) {
+      where.createdBy = query.createdBy;
+    }
+
+    if (query.cityId) {
+      where.locations = { some: { cityId: query.cityId } };
+    }
+
+    if (query.keyword) {
+      where.slug = { contains: toSlug(query.keyword) };
+    }
+
+    if (query.startDate || query.endDate) {
+      where.createdAt = {};
+      if (query.startDate) {
+        where.createdAt.gte = new Date(query.startDate);
+      }
+
+      if (query.endDate) {
+        const end = new Date(query.endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
+
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+
+    const [totalRecord, tours] = await Promise.all([
+      this.prisma.tour.count({ where }),
+      this.prisma.tour.findMany({
+        where,
+        include: {
+          locations: true,
+          images: true,
+        },
+        orderBy: { position: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
+
+    const totalPage = Math.ceil(totalRecord / limit);
+    return new PaginatedResponse(
+      tours.map((t) => new TourResponse(t)),
+      new PaginationMeta({ page, limit, totalRecord, totalPage }),
+    );
+  }
+
+  async findOne(id: number): Promise<TourResponse> {
+    const tour = await this.prisma.tour.findFirst({
+      where: { id, deleted: false },
+      include: {
+        locations: true,
+        images: true,
+      },
+    });
+
+    if (!tour) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.TOUR.TOUR_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return new TourResponse(tour);
+  }
   async create(dto: CreateTourDto, userId: number): Promise<TourResponse> {
     const category = await this.prisma.category.findFirst({
       where: { id: dto.categoryId, deleted: false },
@@ -328,6 +414,38 @@ export class TourService {
             `Failed to delete tour image from Cloudinary: ${error.message}`,
           );
         });
+    }
+
+    return true;
+  }
+
+  async changeMulti(dto: ChangeMultiTourDto, userId: number): Promise<boolean> {
+    const { option, ids } = dto;
+
+    switch (option) {
+      case MultiAction.ACTIVE:
+      case MultiAction.INACTIVE:
+        await this.prisma.tour.updateMany({
+          where: { id: { in: ids }, deleted: false },
+          data: {
+            status:
+              option === MultiAction.ACTIVE
+                ? TourStatus.ACTIVE
+                : TourStatus.INACTIVE,
+            updatedBy: userId,
+          },
+        });
+        break;
+
+      case MultiAction.DELETE:
+        await this.prisma.tour.updateMany({
+          where: { id: { in: ids }, deleted: false },
+          data: {
+            deleted: true,
+            deletedBy: userId,
+          },
+        });
+        break;
     }
 
     return true;

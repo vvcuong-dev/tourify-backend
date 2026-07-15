@@ -11,6 +11,8 @@ import {
   UseInterceptors,
   UploadedFile,
   UploadedFiles,
+  Query,
+  Get,
 } from '@nestjs/common';
 import { TourService } from './tour.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
@@ -21,16 +23,36 @@ import { FileInterceptor } from '@nestjs/platform-express/multer/interceptors/fi
 import { UPLOAD_LIMITS } from '../../constants/upload.constant';
 import { createImageUploadOptions } from '../../utils/multer.util';
 import { FilesInterceptor } from '@nestjs/platform-express/multer/interceptors/files.interceptor';
+import { QueryTourDto } from './dto/query-tour.dto';
+import { ChangeMultiTourDto } from './dto/change-multi-tour.dto';
 
-@Controller('admin/tour')
+@Controller('admin/tours')
 @UseGuards(JwtAuthGuard)
 export class TourController {
   constructor(private readonly tourService: TourService) {}
+
+  @Get()
+  async findAll(@Query() query: QueryTourDto) {
+    return this.tourService.findAll(query);
+  }
+
+  @Get(':id')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.tourService.findOne(id);
+  }
 
   @Post()
   async create(@Body() dto: CreateTourDto, @Req() req: RequestWithUser) {
     const userId = req.user.id;
     return this.tourService.create(dto, userId);
+  }
+
+  @Patch('change-multi')
+  async changeMulti(
+    @Body() dto: ChangeMultiTourDto,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.tourService.changeMulti(dto, req.user.id);
   }
 
   @Patch(':id')
