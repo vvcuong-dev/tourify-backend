@@ -1,13 +1,9 @@
-import { Expose } from 'class-transformer';
-
 export class TokenPairResponse {
-  @Expose()
   accessToken!: string;
-
-  @Expose()
   refreshToken!: string;
 
-  constructor(partial: Partial<TokenPairResponse>) {
-    Object.assign(this, partial);
+  constructor(accessToken: string, refreshToken: string) {
+    this.accessToken = accessToken;
+    this.refreshToken = refreshToken;
   }
 }

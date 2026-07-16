@@ -1,33 +1,23 @@
-import { Exclude, Expose } from 'class-transformer';
-import { UserStatus } from '../../../generated/prisma/enums';
+import { User } from '../../../generated/prisma/client';
 
-@Exclude()
 export class UserResponse {
-  @Expose()
   id!: number;
-
-  @Expose()
   name!: string;
-
-  @Expose()
   email!: string;
-
-  @Expose()
-  status!: UserStatus;
-
-  @Expose()
+  status!: string;
   avatar!: string | null;
-
-  @Expose()
   phone!: string | null;
-
-  @Expose()
   createdAt!: Date;
-
-  @Expose()
   updatedAt!: Date;
 
-  constructor(partial: Partial<UserResponse>) {
-    Object.assign(this, partial);
+  constructor(user: User) {
+    this.id = user.id;
+    this.name = user.name;
+    this.email = user.email;
+    this.status = user.status;
+    this.avatar = user.avatar;
+    this.phone = user.phone;
+    this.createdAt = user.createdAt;
+    this.updatedAt = user.updatedAt;
   }
 }

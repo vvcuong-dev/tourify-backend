@@ -1,47 +1,33 @@
-import { Expose, Type } from 'class-transformer';
+import { Category } from '../../../generated/prisma/client';
 
 export class CategoryResponse {
-  @Expose()
   id!: number;
-
-  @Expose()
   name!: string;
-
-  @Expose()
   slug!: string;
-
-  @Expose()
   parentId!: number | null;
-
-  @Expose()
   position!: number;
-
-  @Expose()
   status!: string;
-
-  @Expose()
   image!: string | null;
-
-  @Expose()
   description!: string | null;
-
-  @Expose()
   createdBy!: number | null;
-
-  @Expose()
   updatedBy!: number | null;
-
-  @Expose()
   createdAt!: Date;
-
-  @Expose()
   updatedAt!: Date;
-
-  @Expose()
-  @Type(() => CategoryResponse)
   children?: CategoryResponse[];
 
-  constructor(partial: Partial<CategoryResponse>) {
-    Object.assign(this, partial);
+  constructor(category: Category, children?: CategoryResponse[]) {
+    this.id = category.id;
+    this.name = category.name;
+    this.slug = category.slug;
+    this.parentId = category.parentId;
+    this.position = category.position;
+    this.status = category.status;
+    this.image = category.image;
+    this.description = category.description;
+    this.createdBy = category.createdBy;
+    this.updatedBy = category.updatedBy;
+    this.createdAt = category.createdAt;
+    this.updatedAt = category.updatedAt;
+    if (children) this.children = children;
   }
 }

@@ -84,8 +84,6 @@ export class UserService {
         });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...result } = upload;
-    return new UserResponse(result);
+    return new UserResponse(upload);
   }
 }

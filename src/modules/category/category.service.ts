@@ -103,17 +103,7 @@ export class CategoryService {
       (c) => new CategoryResponse(c),
     );
 
-    const tree = buildCategoryTree<CategoryResponse>(responses);
-
-    return this.mapTreeToResponse(tree);
-  }
-
-  private mapTreeToResponse(nodes: CategoryResponse[]): CategoryResponse[] {
-    return nodes.map((node) => {
-      const response = new CategoryResponse(node);
-      response.children = this.mapTreeToResponse(node.children ?? []);
-      return response;
-    });
+    return buildCategoryTree<CategoryResponse>(responses);
   }
 
   async create(

@@ -97,13 +97,11 @@ export class AuthService {
         EX: TTL.WEEK, // 7 days
       },
     );
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...result } = user;
 
-    return new LoginResponse({
-      user: new UserResponse(result),
-      tokens: new TokenPairResponse({ accessToken, refreshToken }),
-    });
+    return new LoginResponse(
+      new UserResponse(user),
+      new TokenPairResponse(accessToken, refreshToken),
+    );
   }
 
   async refreshToken(token: RefreshTokenDto): Promise<RefreshTokenResponse> {
@@ -161,10 +159,7 @@ export class AuthService {
       },
     );
 
-    return new RefreshTokenResponse({
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-    });
+    return new RefreshTokenResponse(newAccessToken, newRefreshToken);
   }
 
   async changePassword(
