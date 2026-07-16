@@ -34,14 +34,14 @@ export class CategoryController {
     return this.categoryService.findAll(query);
   }
 
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.categoryService.findOne(id);
-  }
-
   @Get('tree')
   findTree() {
     return this.categoryService.findTree();
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.categoryService.findOne(id);
   }
 
   @Post()
