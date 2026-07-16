@@ -17,6 +17,7 @@ import {
   PaginationMeta,
 } from '../../common/responses/paginated.response';
 import { buildCategoryTree } from '../../utils/category-tree.util';
+import { CategoryListResponse } from './responses/category-list.response';
 
 @Injectable()
 export class CategoryService {
@@ -26,37 +27,27 @@ export class CategoryService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async findAll(
-    query: QueryCategoryDto,
-  ): Promise<PaginatedResponse<CategoryResponse>> {
-    const where: Prisma.CategoryWhereInput = {
-      deleted: false,
-    };
-
-    if (query.status) {
-      where.status = query.status;
-    }
-
-    if (query.createdBy) {
-      where.createdBy = query.createdBy;
-    }
-
-    if (query.keyword) {
-      where.slug = { contains: toSlug(query.keyword) };
-    }
-
+  private buildWhereClause(query: QueryCategoryDto): Prisma.CategoryWhereInput {
+    const where: Prisma.CategoryWhereInput = { deleted: false };
+    if (query.status) where.status = query.status;
+    if (query.createdBy) where.createdBy = query.createdBy;
+    if (query.keyword) where.slug = { contains: toSlug(query.keyword) };
     if (query.startDate || query.endDate) {
       where.createdAt = {};
-      if (query.startDate) {
-        where.createdAt.gte = new Date(query.startDate);
-      }
-
+      if (query.startDate) where.createdAt.gte = new Date(query.startDate);
       if (query.endDate) {
         const end = new Date(query.endDate);
         end.setHours(23, 59, 59, 999);
         where.createdAt.lte = end;
       }
     }
+    return where;
+  }
+
+  async findAll(
+    query: QueryCategoryDto,
+  ): Promise<PaginatedResponse<CategoryListResponse>> {
+    const where: Prisma.CategoryWhereInput = this.buildWhereClause(query);
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 3;
@@ -73,7 +64,7 @@ export class CategoryService {
 
     const totalPage = Math.ceil(totalRecord / limit);
     return new PaginatedResponse(
-      categories.map((c) => new CategoryResponse(c)),
+      categories.map((c) => new CategoryListResponse(c)),
       new PaginationMeta({ page, limit, totalRecord, totalPage }),
     );
   }
