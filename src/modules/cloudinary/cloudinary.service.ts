@@ -5,7 +5,7 @@ import {
   v2 as CloudinaryType,
 } from 'cloudinary';
 import * as streamifier from 'streamifier';
-import { AppException } from '../../exceptions/app.exception';
+import { AppException } from '../../common/exceptions/app.exception';
 import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
 
 @Injectable()

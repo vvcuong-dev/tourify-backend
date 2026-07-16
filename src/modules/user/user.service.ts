@@ -2,12 +2,12 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-user.dto';
 import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
-import { AppException } from '../../exceptions/app.exception';
+import { AppException } from '../../common/exceptions/app.exception';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CLOUDINARY_FOLDERS } from '../../constants/cloudinary.constant';
 import { Logger } from '@nestjs/common';
 import { User } from '../../generated/prisma/browser';
-import { UserResponse } from '../../common/responses/user.response';
+import { UserResponse } from './responses/user.response';
 
 @Injectable()
 export class UserService {

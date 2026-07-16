@@ -1,4 +1,4 @@
-import { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '../../../generated/prisma/client';
 import { TourImageResponse } from './tour-image.response';
 
 type TourWithRelations = Prisma.TourGetPayload<{

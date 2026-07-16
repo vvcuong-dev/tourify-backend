@@ -1,6 +1,6 @@
 import { Expose, Type } from 'class-transformer';
-import { UserResponse } from '../../../common/responses/user.response';
-import { TokenPairResponse } from '../../../common/responses/token-pair.response';
+import { UserResponse } from '../../user/responses/user.response';
+import { TokenPairResponse } from './token-pair.response';
 
 export class LoginResponse {
   @Expose()

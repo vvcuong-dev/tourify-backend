@@ -11,13 +11,13 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import type { RequestWithUser } from '../../common/types/request-with-user.type';
 import { ChangeEmailDto } from './dto/change-email.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
-import { AppException } from '../../exceptions/app.exception';
+import { AppException } from '../../common/exceptions/app.exception';
 
 @Controller('admin/auth')
 export class AuthController {

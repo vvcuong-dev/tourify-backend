@@ -2,7 +2,7 @@ import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer
 import type { ImageUploadLimit } from '../common/types/upload.type';
 import { MB_TO_BYTES } from '../constants/upload.constant';
 import { TOURIFY_ERROR_CODES } from '../constants/error-code.constant';
-import { AppException } from '../exceptions/app.exception';
+import { AppException } from '../common/exceptions/app.exception';
 import { HttpStatus } from '@nestjs/common/enums/http-status.enum';
 
 export function createImageUploadOptions(

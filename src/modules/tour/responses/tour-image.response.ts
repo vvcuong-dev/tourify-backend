@@ -1,4 +1,4 @@
-import { TourImage } from '../../generated/prisma/client';
+import { TourImage } from '../../../generated/prisma/client';
 
 export class TourImageResponse {
   id!: number;

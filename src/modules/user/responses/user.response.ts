@@ -1,5 +1,5 @@
 import { Exclude, Expose } from 'class-transformer';
-import { UserStatus } from '../../generated/prisma/enums';
+import { UserStatus } from '../../../generated/prisma/enums';
 
 @Exclude()
 export class UserResponse {

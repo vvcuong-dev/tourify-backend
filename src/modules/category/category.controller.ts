@@ -16,7 +16,7 @@ import {
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import type { RequestWithUser } from '../../common/types/request-with-user.type';
-import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express/multer/interceptors/file.interceptor';
 import { createImageUploadOptions } from '../../utils/multer.util';
 import { UPLOAD_LIMITS } from '../../constants/upload.constant';

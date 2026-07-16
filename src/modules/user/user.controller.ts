@@ -10,7 +10,7 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import type { RequestWithUser } from '../../common/types/request-with-user.type';
 import { UpdateProfileDto } from './dto/update-user.dto';
 import { createImageUploadOptions } from '../../utils/multer.util';

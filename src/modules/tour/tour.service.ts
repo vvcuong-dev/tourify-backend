@@ -1,8 +1,7 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTourDto } from './dto/create-tour.dto';
-import { TourResponse } from '../../common/responses/tour-response';
-import { AppException } from '../../exceptions/app.exception';
+import { AppException } from '../../common/exceptions/app.exception';
 import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
 import { generateUniqueSlug, toSlug } from '../../utils/slug.util';
 import { instanceToPlain } from 'class-transformer';
@@ -17,6 +16,8 @@ import {
 import { QueryTourDto } from './dto/query-tour.dto';
 import { MultiAction } from '../../common/enums/multi-action.enum';
 import { ChangeMultiTourDto } from './dto/change-multi-tour.dto';
+import { TourResponse } from './responses/tour-response';
+import { TourListResponse } from './responses/tour-list.response';
 
 @Injectable()
 export class TourService {
@@ -26,44 +27,34 @@ export class TourService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async findAll(query: QueryTourDto): Promise<PaginatedResponse<TourResponse>> {
-    const where: Prisma.TourWhereInput = {
-      deleted: false,
-    };
+  private buildWhereClause(query: QueryTourDto): Prisma.TourWhereInput {
+    const where: Prisma.TourWhereInput = { deleted: false };
 
-    if (query.status) {
-      where.status = query.status;
-    }
-
-    if (query.categoryId) {
-      where.categoryId = query.categoryId;
-    }
-
-    if (query.createdBy) {
-      where.createdBy = query.createdBy;
-    }
-
+    if (query.status) where.status = query.status;
+    if (query.categoryId) where.categoryId = query.categoryId;
+    if (query.createdBy) where.createdBy = query.createdBy;
     if (query.cityId) {
       where.locations = { some: { cityId: query.cityId } };
     }
-
     if (query.keyword) {
       where.slug = { contains: toSlug(query.keyword) };
     }
-
     if (query.startDate || query.endDate) {
       where.createdAt = {};
-      if (query.startDate) {
-        where.createdAt.gte = new Date(query.startDate);
-      }
-
+      if (query.startDate) where.createdAt.gte = new Date(query.startDate);
       if (query.endDate) {
         const end = new Date(query.endDate);
         end.setHours(23, 59, 59, 999);
         where.createdAt.lte = end;
       }
     }
+    return where;
+  }
 
+  async findAll(
+    query: QueryTourDto,
+  ): Promise<PaginatedResponse<TourListResponse>> {
+    const where = this.buildWhereClause(query);
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
 
@@ -73,9 +64,8 @@ export class TourService {
         where,
         include: {
           locations: true,
-          images: true,
         },
-        orderBy: { position: 'asc' },
+        orderBy: [{ position: 'asc' }, { id: 'asc' }],
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -83,7 +73,7 @@ export class TourService {
 
     const totalPage = Math.ceil(totalRecord / limit);
     return new PaginatedResponse(
-      tours.map((t) => new TourResponse(t)),
+      tours.map((t) => new TourListResponse(t)),
       new PaginationMeta({ page, limit, totalRecord, totalPage }),
     );
   }

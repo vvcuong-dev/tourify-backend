@@ -5,6 +5,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Max,
   Min,
 } from 'class-validator';
 import { TourStatus } from '../../../generated/prisma/browser';
@@ -14,13 +15,14 @@ export class QueryTourDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number;
+  page?: number = 1;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  limit?: number;
+  @Max(100)
+  limit?: number = 10;
 
   @IsOptional()
   @IsString()

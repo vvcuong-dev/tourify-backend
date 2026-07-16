@@ -15,7 +15,7 @@ import {
   Get,
 } from '@nestjs/common';
 import { TourService } from './tour.service';
-import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CreateTourDto } from './dto/create-tour.dto';
 import type { RequestWithUser } from '../../common/types/request-with-user.type';
 import { UpdateTourDto } from './dto/update-tour.dto';

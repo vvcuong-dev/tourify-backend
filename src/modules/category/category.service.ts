@@ -1,9 +1,9 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
-import { CategoryResponse } from '../../common/responses/category.response';
+import { CategoryResponse } from './responses/category.response';
 import { TOURIFY_ERROR_CODES } from '../../constants/error-code.constant';
-import { AppException } from '../../exceptions/app.exception';
+import { AppException } from '../../common/exceptions/app.exception';
 import { generateUniqueSlug, toSlug } from '../../utils/slug.util';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CLOUDINARY_FOLDERS } from '../../constants/cloudinary.constant';
@@ -65,7 +65,7 @@ export class CategoryService {
       this.prisma.category.count({ where }),
       this.prisma.category.findMany({
         where,
-        orderBy: { position: 'asc' },
+        orderBy: [{ position: 'asc' }, { id: 'asc' }],
         skip: (page - 1) * limit,
         take: limit,
       }),
