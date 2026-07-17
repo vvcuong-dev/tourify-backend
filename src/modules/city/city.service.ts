@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CityResponse } from './responses/city-list.response';
+import { CityResponse } from './responses/city.response';
 
 @Injectable()
 export class CityService {

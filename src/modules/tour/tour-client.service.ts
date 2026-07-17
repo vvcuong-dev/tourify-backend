@@ -18,7 +18,7 @@ import {
 import { PAGE_TITLE } from '../../constants/page-title.constant';
 import { toSlug } from '../../utils/slug.util';
 import { DATE_FORMAT } from '../../constants/date-format.constant';
-import { CityResponse } from '../city/responses/city-list.response';
+import { CityResponse } from '../city/responses/city.response';
 
 @Injectable()
 export class TourClientService {

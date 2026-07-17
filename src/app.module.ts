@@ -12,6 +12,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { CategoryModule } from './modules/category/category.module';
 import { TourModule } from './modules/tour/tour.module';
 import { CityModule } from './modules/city/city.module';
+import { CartModule } from './modules/cart/cart.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CityModule } from './modules/city/city.module';
     CategoryModule,
     TourModule,
     CityModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService],
