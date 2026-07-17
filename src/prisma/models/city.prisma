@@ -3,6 +3,7 @@ model City {
     name String @unique
 
     tourLocations TourLocation[]
+    orderItems    OrderItem[]
 
     @@map("cities")
 }

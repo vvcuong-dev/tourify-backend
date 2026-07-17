@@ -1,0 +1,26 @@
+model OrderItem {
+    id      Int   @id @default(autoincrement())
+    orderId Int   @map("order_id")
+    order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+    tourId Int  @map("tour_id")
+    tour   Tour @relation(fields: [tourId], references: [id])
+
+    cityId Int  @map("city_id")
+    city   City @relation(fields: [cityId], references: [id])
+
+    name          String
+    avatar        String?
+    slug          String
+    departureDate DateTime? @map("departure_date")
+
+    priceNewAdult    Int @map("price_new_adult")
+    priceNewChildren Int @map("price_new_children")
+    priceNewBaby     Int @map("price_new_baby")
+
+    quantityAdult    Int @map("quantity_adult")
+    quantityChildren Int @map("quantity_children")
+    quantityBaby     Int @map("quantity_baby")
+
+    @@map("order_items")
+}

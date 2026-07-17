@@ -1,0 +1,24 @@
+model Order {
+    id        Int    @id @default(autoincrement())
+    orderCode String @unique @map("order_code")
+
+    fullName String  @map("full_name")
+    email    String
+    phone    String
+    note     String?
+
+    paymentMethod PaymentMethod @map("payment_method")
+    paymentStatus PaymentStatus @default(UNPAID) @map("payment_status")
+    status        OrderStatus   @default(INITIAL)
+
+    subTotal Int @map("sub_total")
+    discount Int @default(0)
+    total    Int
+
+    items OrderItem[]
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("orders")
+}

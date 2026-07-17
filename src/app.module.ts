@@ -13,6 +13,7 @@ import { CategoryModule } from './modules/category/category.module';
 import { TourModule } from './modules/tour/tour.module';
 import { CityModule } from './modules/city/city.module';
 import { CartModule } from './modules/cart/cart.module';
+import { OrderModule } from './modules/order/order.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CartModule } from './modules/cart/cart.module';
     TourModule,
     CityModule,
     CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService],
