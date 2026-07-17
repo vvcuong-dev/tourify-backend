@@ -6,5 +6,6 @@ model TourLocation {
     city   City @relation(fields: [cityId], references: [id])
 
     @@unique([tourId, cityId])
+    @@index([cityId])
     @@map("tour_locations")
 }

@@ -16,6 +16,43 @@ export const TTL = {
 // Manage cache keys with a consistent prefix and versioning
 
 export const CACHE = {
+  CATEGORY: {
+    _VER: 'v1',
+    _KEY: {
+      DETAIL_BY_SLUG: (slug: string) =>
+        `${PREFIX}:${GLOBAL_VER}:categories:${CACHE.CATEGORY._VER}:detail:slug_${slug}`,
+      TREE: () =>
+        `${PREFIX}:${GLOBAL_VER}:categories:${CACHE.CATEGORY._VER}:tree`,
+    },
+    TAGS: {
+      ROOT: () => [`${PREFIX}:category`],
+      DETAIL: (slug: string) => [`${PREFIX}:category`, slug],
+      TREE: () => [`${PREFIX}:category`, 'tree'],
+    },
+  },
+  TOUR: {
+    _VER: 'v1',
+    _KEY: {
+      DETAIL_BY_SLUG: (slug: string) =>
+        `${PREFIX}:${GLOBAL_VER}:tours:${CACHE.TOUR._VER}:detail:slug_${slug}`,
+      SEARCH: (queryHash: string) =>
+        `${PREFIX}:${GLOBAL_VER}:tours:${CACHE.TOUR._VER}:search:${queryHash}`,
+    },
+    TAGS: {
+      ROOT: () => [`${PREFIX}:tour`],
+      DETAIL: (slug: string) => [`${PREFIX}:tour`, slug],
+      SEARCH: () => [`${PREFIX}:tour`, 'search'],
+    },
+  },
+  CITY: {
+    _VER: 'v1',
+    _KEY: {
+      LIST: () => `${PREFIX}:${GLOBAL_VER}:cities:${CACHE.CITY._VER}:list`,
+    },
+    TAGS: {
+      ROOT: () => [`${PREFIX}:city`],
+    },
+  },
   USER: {
     _VER: 'v1',
     _KEY: {

@@ -38,5 +38,10 @@ model Tour {
     createdAt DateTime @default(now()) @map("created_at") @db.Timestamp
     updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp()
 
+    @@index([categoryId])
+    @@index([status, deleted])
+    @@index([departureDate])
+    @@index([priceNewAdult])
+    @@index([position])
     @@map("tours")
 }
