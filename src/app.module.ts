@@ -11,6 +11,7 @@ import { RedisModule } from './modules/redis/redis.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { CategoryModule } from './modules/category/category.module';
 import { TourModule } from './modules/tour/tour.module';
+import { CityModule } from './modules/city/city.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { TourModule } from './modules/tour/tour.module';
     CloudinaryModule,
     CategoryModule,
     TourModule,
+    CityModule,
   ],
   controllers: [AppController],
   providers: [AppService],

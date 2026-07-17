@@ -1,4 +1,4 @@
-import { City, Tour } from '../../../generated/prisma/client';
+import { Tour } from '../../../generated/prisma/client';
 import { CategoryResponse } from './category.response';
 
 export class BreadcrumbItem {
@@ -48,21 +48,10 @@ export class TourItemResponse {
   }
 }
 
-export class CityResponse {
-  id!: number;
-  name!: string;
-
-  constructor(city: City) {
-    this.id = city.id;
-    this.name = city.name;
-  }
-}
-
 export class CategoryDetailResponse {
   pageTitle!: string;
   breadcrumb!: Breadcrumb;
   category!: CategoryResponse;
   tourList!: TourItemResponse[];
   totalTour!: number;
-  cityList!: CityResponse[];
 }

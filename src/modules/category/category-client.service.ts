@@ -10,7 +10,6 @@ import { CategoryResponse } from './responses/category.response';
 import {
   Breadcrumb,
   CategoryDetailResponse,
-  CityResponse,
   TourItemResponse,
 } from './responses/category-detail.response';
 import { PAGE_TITLE } from '../../constants/page-title.constant';
@@ -23,10 +22,9 @@ export class CategoryClientService {
   async findBySlug(slug: string): Promise<CategoryDetailResponse> {
     const category = await this.getCategoryBySlug(slug);
 
-    const [breadcrumb, tourData, cityList] = await Promise.all([
+    const [breadcrumb, tourData] = await Promise.all([
       this.buildBreadcrumb(category),
       this.getTourListByCategory(category.id),
-      this.prisma.city.findMany(),
     ]);
 
     return {
@@ -35,7 +33,6 @@ export class CategoryClientService {
       category: new CategoryResponse(category),
       tourList: tourData.tourList,
       totalTour: tourData.totalTour,
-      cityList: cityList.map((c) => new CityResponse(c)),
     };
   }
 

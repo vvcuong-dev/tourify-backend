@@ -13,12 +13,12 @@ import { SearchTourDto } from './dto/search-tour.dto';
 import { TourDetailResponse } from './responses/tour-detail.response';
 import {
   Breadcrumb,
-  CityResponse,
   TourItemResponse,
 } from '../category/responses/category-detail.response';
 import { PAGE_TITLE } from '../../constants/page-title.constant';
 import { toSlug } from '../../utils/slug.util';
 import { DATE_FORMAT } from '../../constants/date-format.constant';
+import { CityResponse } from '../city/responses/city-list.response';
 
 @Injectable()
 export class TourClientService {
