@@ -14,6 +14,7 @@ import {
   TourItemResponse,
 } from './responses/category-detail.response';
 import { PAGE_TITLE } from '../../constants/page-title.constant';
+import { DATE_FORMAT } from '../../constants/date-format.constant';
 
 @Injectable()
 export class CategoryClientService {
@@ -113,7 +114,7 @@ export class CategoryClientService {
         new TourItemResponse({
           ...item,
           departureDateFormat: item.departureDate
-            ? moment(item.departureDate).format('DD/MM/YYYY')
+            ? moment(item.departureDate).format(DATE_FORMAT.DEFAULT)
             : '',
         }),
     );

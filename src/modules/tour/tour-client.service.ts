@@ -18,6 +18,7 @@ import {
 } from '../category/responses/category-detail.response';
 import { PAGE_TITLE } from '../../constants/page-title.constant';
 import { toSlug } from '../../utils/slug.util';
+import { DATE_FORMAT } from '../../constants/date-format.constant';
 
 @Injectable()
 export class TourClientService {
@@ -85,7 +86,7 @@ export class TourClientService {
           new TourItemResponse({
             ...item,
             departureDateFormat: item.departureDate
-              ? moment(item.departureDate).format('DD/MM/YYYY')
+              ? moment(item.departureDate).format(DATE_FORMAT.DEFAULT)
               : '',
           }),
       ),
@@ -117,7 +118,7 @@ export class TourClientService {
       tourDetail: new TourDetailResponse({
         ...tourDetail,
         departureDateFormat: tourDetail.departureDate
-          ? moment(tourDetail.departureDate).format('DD/MM/YYYY')
+          ? moment(tourDetail.departureDate).format(DATE_FORMAT.DEFAULT)
           : '',
       }),
       cityList: tourDetail.locations.map((l) => new CityResponse(l.city)),
