@@ -11,3 +11,17 @@ export function buildCategoryTree<T extends CategoryNode>(
       children: buildCategoryTree(categories, cat.id),
     }));
 }
+
+export function getAllSubcategoryIds<T extends CategoryNode>(
+  categories: T[],
+  categoryId: number,
+): number[] {
+  const result: number[] = [categoryId];
+
+  const children = categories.filter((cat) => cat.parentId === categoryId);
+  for (const child of children) {
+    result.push(...getAllSubcategoryIds(categories, child.id));
+  }
+
+  return result;
+}
