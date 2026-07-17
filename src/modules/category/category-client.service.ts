@@ -13,6 +13,7 @@ import {
   CityResponse,
   TourItemResponse,
 } from './responses/category-detail.response';
+import { PAGE_TITLE } from '../../constants/page-title.constant';
 
 @Injectable()
 export class CategoryClientService {
@@ -28,7 +29,7 @@ export class CategoryClientService {
     ]);
 
     return {
-      pageTitle: 'Danh sách tour',
+      pageTitle: PAGE_TITLE.TOUR_LIST,
       breadcrumb,
       category: new CategoryResponse(category),
       tourList: tourData.tourList,
@@ -56,7 +57,7 @@ export class CategoryClientService {
     const breadcrumb: Breadcrumb = {
       image: category.image,
       title: category.name,
-      list: [{ link: '/', title: 'Trang chủ' }],
+      list: [{ link: '/', title: PAGE_TITLE.HOME }],
     };
 
     if (category.parentId) {
