@@ -1,6 +1,9 @@
-import { OrderItem } from '../../../generated/prisma/client';
+import { City, OrderItem } from '../../../generated/prisma/client';
 
-type OrderItemWithFormat = OrderItem & { departureDateFormat: string };
+type OrderItemWithFormat = OrderItem & {
+  departureDateFormat: string;
+  city: City;
+};
 
 export class OrderItemResponse {
   tourId!: number;
@@ -9,6 +12,7 @@ export class OrderItemResponse {
   avatar!: string | null;
 
   cityId!: number;
+  cityName!: string;
 
   departureDate!: Date | null;
   departureDateFormat!: string;
@@ -29,6 +33,7 @@ export class OrderItemResponse {
     this.slug = item.slug;
     this.avatar = item.avatar;
     this.cityId = item.cityId;
+    this.cityName = item.city.name;
     this.departureDate = item.departureDate;
     this.departureDateFormat = item.departureDateFormat;
     this.priceNewAdult = item.priceNewAdult;

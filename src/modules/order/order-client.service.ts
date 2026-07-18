@@ -131,7 +131,7 @@ export class OrderClientService {
           total,
           items: { create: orderItemsData },
         },
-        include: { items: true },
+        include: { items: { include: { city: true } } },
       });
 
       return created;
@@ -155,7 +155,7 @@ export class OrderClientService {
   async findByCodeAndEmail(dto: FindOrderDto): Promise<OrderDetailResponse> {
     const order = await this.prisma.order.findFirst({
       where: { orderCode: dto.orderCode, email: dto.email },
-      include: { items: true },
+      include: { items: { include: { city: true } } },
     });
 
     if (!order) {
