@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsPhoneNumber,
   IsStrongPassword,
+  IsUrl,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -51,6 +52,7 @@ export class CreateUserDto {
   status?: UserStatus = UserStatus.PENDING;
 
   @ApiPropertyOptional({ example: 'https://res.cloudinary.com/.../avatar.jpg' })
+  @IsUrl({}, { message: TOURIFY_ERROR_CODES.USER.AVATAR_INVALID })
   @IsOptional()
   avatar?: string;
 

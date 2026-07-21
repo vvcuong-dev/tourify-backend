@@ -1,6 +1,7 @@
 import {
   IsOptional,
   IsPhoneNumber,
+  IsUrl,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -22,5 +23,6 @@ export class UpdateProfileDto {
 
   @ApiPropertyOptional({ example: 'https://res.cloudinary.com/.../avatar.jpg' })
   @IsOptional()
+  @IsUrl({}, { message: TOURIFY_ERROR_CODES.USER.AVATAR_INVALID })
   avatar?: string;
 }

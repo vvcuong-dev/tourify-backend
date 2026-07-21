@@ -4,16 +4,19 @@ import {
   IsStrongPassword,
   MaxLength,
 } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 import { TOURIFY_ERROR_CODES } from '../../../constants/error-code.constant';
 
 const { USER } = TOURIFY_ERROR_CODES;
 
 export class LoginDto {
+  @ApiProperty({ example: 'user@example.com' })
   @IsEmail({}, { message: USER.EMAIL_INVALID })
   @IsNotEmpty({ message: USER.EMAIL_REQUIRED })
   email!: string;
 
+  @ApiProperty({ example: 'Abcd@1234', maxLength: 72 })
   @MaxLength(72, { message: USER.PASSWORD_TOO_LONG })
   @IsStrongPassword(
     {

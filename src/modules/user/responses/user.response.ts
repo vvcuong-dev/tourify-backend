@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../../../generated/prisma/client';
+import { User, UserStatus } from '../../../generated/prisma/client';
 
 export class UserResponse {
   @ApiProperty({ example: 1, description: 'The unique identifier of the user' })
@@ -12,7 +12,7 @@ export class UserResponse {
   })
   email!: string;
   @ApiProperty({ example: 'ACTIVE', description: 'The status of the user' })
-  status!: string;
+  status!: UserStatus;
   @ApiProperty({
     example: 'https://res.cloudinary.com/.../avatar.jpg',
     nullable: true,
