@@ -11,17 +11,26 @@ import {
 
 import { UserStatus } from '../../../generated/prisma/client';
 import { TOURIFY_ERROR_CODES } from '../../../constants/error-code.constant';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateUserDto {
+  @ApiProperty({ example: 'Nguyễn Văn A', minLength: 5, maxLength: 50 })
   @IsNotEmpty({ message: TOURIFY_ERROR_CODES.USER.NAME_REQUIRED })
   @MinLength(5, { message: TOURIFY_ERROR_CODES.USER.NAME_TOO_SHORT })
   @MaxLength(50, { message: TOURIFY_ERROR_CODES.USER.NAME_TOO_LONG })
   name!: string;
 
+  @ApiProperty({ example: 'user@example.com' })
   @IsNotEmpty({ message: TOURIFY_ERROR_CODES.USER.EMAIL_REQUIRED })
   @IsEmail({}, { message: TOURIFY_ERROR_CODES.USER.EMAIL_INVALID })
   email!: string;
 
+  @ApiProperty({
+    example: 'Abcd@1234',
+    description:
+      'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.',
+    maxLength: 50,
+  })
   @IsNotEmpty({ message: TOURIFY_ERROR_CODES.USER.PASSWORD_REQUIRED })
   @MaxLength(50, { message: TOURIFY_ERROR_CODES.USER.PASSWORD_TOO_LONG })
   @IsStrongPassword(
@@ -36,13 +45,16 @@ export class CreateUserDto {
   )
   password!: string;
 
+  @ApiPropertyOptional({ enum: UserStatus, default: UserStatus.PENDING })
   @IsOptional()
   @IsEnum(UserStatus, { message: TOURIFY_ERROR_CODES.USER.STATUS_INVALID })
   status?: UserStatus = UserStatus.PENDING;
 
+  @ApiPropertyOptional({ example: 'https://res.cloudinary.com/.../avatar.jpg' })
   @IsOptional()
   avatar?: string;
 
+  @ApiPropertyOptional({ example: '0901234567' })
   @IsOptional()
   @IsPhoneNumber('VN', { message: TOURIFY_ERROR_CODES.USER.PHONE_INVALID })
   phone?: string;

@@ -9,11 +9,23 @@ import {
 import { AppModule } from './app.module';
 import { appConfig } from './configs/app.config';
 import { TOURIFY_ERROR_CODES } from './constants/error-code.constant';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
+
+  const config = new DocumentBuilder()
+    .setTitle('Tourify API')
+    .setDescription('API documentation for Tourify backend')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
