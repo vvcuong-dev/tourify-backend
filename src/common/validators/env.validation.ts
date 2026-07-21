@@ -36,6 +36,33 @@ class EnvironmentVariables {
   @IsInt()
   @Min(0)
   REDIS_PORT!: number;
+
+  @IsString()
+  REDIS_PASSWORD!: string;
+
+  @IsString()
+  CLOUDINARY_NAME!: string;
+
+  @IsString()
+  CLOUDINARY_API_KEY!: string;
+
+  @IsString()
+  CLOUDINARY_API_SECRET!: string;
+
+  @IsString()
+  ZALOPAY_APP_ID!: string;
+
+  @IsString()
+  ZALOPAY_KEY1!: string;
+
+  @IsString()
+  ZALOPAY_KEY2!: string;
+
+  @IsString()
+  ZALOPAY_ENDPOINT!: string;
+
+  @IsString()
+  DOMAIN_WEBSITE!: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

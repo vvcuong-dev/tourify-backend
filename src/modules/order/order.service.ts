@@ -112,6 +112,7 @@ export class OrderService {
   ): Promise<OrderDetailResponse> {
     const order = await this.prisma.order.findFirst({
       where: { id, deleted: false },
+      include: { items: { include: { city: true } } },
     });
 
     if (!order) {

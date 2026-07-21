@@ -14,6 +14,7 @@ import { TourModule } from './modules/tour/tour.module';
 import { CityModule } from './modules/city/city.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrderModule } from './modules/order/order.module';
+import { PaymentModule } from './modules/payment/payment.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { OrderModule } from './modules/order/order.module';
     CityModule,
     CartModule,
     OrderModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
