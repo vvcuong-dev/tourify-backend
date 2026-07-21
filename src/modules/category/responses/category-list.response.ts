@@ -1,13 +1,22 @@
-import { Category } from '../../../generated/prisma/client';
+import { Category, CategoryStatus } from '../../../generated/prisma/client';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CategoryListResponse {
+  @ApiProperty({ example: 1 })
   id!: number;
+  @ApiProperty({ example: 'Beach Tour' })
   name!: string;
+  @ApiProperty({ example: 1 })
   position!: number;
-  status!: string;
+  @ApiProperty({ enum: CategoryStatus, example: CategoryStatus.ACTIVE })
+  status!: CategoryStatus;
+  @ApiProperty({ example: 'https://example.com/image.jpg', nullable: true })
   image!: string | null;
+  @ApiProperty({ example: 'Description', nullable: true })
   description!: string | null;
+  @ApiProperty({ type: String, format: 'date-time' })
   createdAt!: Date;
+  @ApiProperty({ type: String, format: 'date-time' })
   updatedAt!: Date;
 
   constructor(category: Category) {

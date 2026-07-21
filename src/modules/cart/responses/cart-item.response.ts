@@ -1,6 +1,7 @@
 import { City, Tour } from '../../../generated/prisma/client';
 import { CartItemInputDto } from '../dto/cart-item-input.dto';
 import { PassengerType } from '../../../common/enums/passenger-type.enum';
+import { ApiProperty } from '@nestjs/swagger';
 
 type CartItemInput = CartItemInputDto & {
   tour: Tour;
@@ -9,32 +10,52 @@ type CartItemInput = CartItemInputDto & {
 };
 
 export class CartItemResponse {
+  @ApiProperty({ example: 1 })
   tourId!: number;
+  @ApiProperty({ example: 'Ha Long Bay Tour' })
   name!: string;
+  @ApiProperty({ example: 'ha-long-bay-tour' })
   slug!: string;
+  @ApiProperty({ example: 'https://example.com/avatar.jpg', nullable: true })
   avatar!: string | null;
 
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   departureDate!: Date | null;
+  @ApiProperty({ example: '01/07/2026' })
   departureDateFormat!: string;
 
+  @ApiProperty({ example: 1200000 })
   priceNewAdult!: number;
+  @ApiProperty({ example: 900000 })
   priceNewChildren!: number;
+  @ApiProperty({ example: 200000 })
   priceNewBaby!: number;
 
+  @ApiProperty({ example: 10 })
   stockAdult!: number;
+  @ApiProperty({ example: 8 })
   stockChildren!: number;
+  @ApiProperty({ example: 5 })
   stockBaby!: number;
 
+  @ApiProperty({ example: 2 })
   quantityAdult!: number;
+  @ApiProperty({ example: 1 })
   quantityChildren!: number;
+  @ApiProperty({ example: 0 })
   quantityBaby!: number;
 
+  @ApiProperty({ example: 1 })
   cityId!: number;
+  @ApiProperty({ example: 'Ha Noi' })
   cityName!: string;
 
+  @ApiProperty({ example: 2600000 })
   subtotal!: number;
 
+  @ApiProperty({ example: true })
   isStockValid!: boolean;
+  @ApiProperty({ type: [String], example: ['ADULT'] })
   stockExceeded!: PassengerType[];
 
   constructor(item: CartItemInput) {
