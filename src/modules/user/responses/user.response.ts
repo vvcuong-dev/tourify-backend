@@ -11,7 +11,11 @@ export class UserResponse {
     description: 'The email of the user',
   })
   email!: string;
-  @ApiProperty({ example: 'ACTIVE', description: 'The status of the user' })
+  @ApiProperty({
+    enum: UserStatus,
+    example: UserStatus.ACTIVE,
+    description: 'The status of the user',
+  })
   status!: UserStatus;
   @ApiProperty({
     example: 'https://res.cloudinary.com/.../avatar.jpg',

@@ -8,6 +8,10 @@ import {
   UseInterceptors,
   Post,
   UploadedFile,
+  Delete,
+  Param,
+  ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -21,10 +25,15 @@ import {
   ApiBody,
   ApiConsumes,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { UserResponse } from './responses/user.response';
+import { CreateUserDto } from './dto/create-user.dto';
+import { QueryUserDto } from './dto/query-user.dto';
+import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
+import { PaginatedResponse } from '../../common/responses/paginated.response';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -83,5 +92,68 @@ export class UserController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.userService.updateAvatar(req.user.id, file);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'List users with filters' })
+  @ApiResponse({
+    status: 200,
+    description: 'Users retrieved successfully.',
+    type: PaginatedResponse,
+  })
+  findAll(@Query() query: QueryUserDto) {
+    return this.userService.findAll(query);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get user detail by id' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'User retrieved successfully.',
+    type: UserResponse,
+  })
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.findOne(id);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create a user' })
+  @ApiBody({ type: CreateUserDto })
+  @ApiResponse({
+    status: 201,
+    description: 'User created successfully.',
+    type: UserResponse,
+  })
+  create(@Body() dto: CreateUserDto) {
+    return this.userService.create(dto);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update a user' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: AdminUpdateUserDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User updated successfully.',
+    type: UserResponse,
+  })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: AdminUpdateUserDto,
+  ) {
+    return this.userService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Soft delete a user' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'User deleted successfully.',
+    schema: { type: 'boolean' },
+  })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.remove(id);
   }
 }
