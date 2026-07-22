@@ -35,7 +35,6 @@ import { FilesInterceptor } from '@nestjs/platform-express/multer/interceptors/f
 import { QueryTourDto } from './dto/query-tour.dto';
 import { ChangeMultiTourDto } from './dto/change-multi-tour.dto';
 import { TourResponse } from './responses/tour-response';
-import { TourListResponse } from './responses/tour-list.response';
 import { PaginatedResponse } from '../../common/responses/paginated.response';
 
 @ApiTags('Tours')

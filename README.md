@@ -1,61 +1,64 @@
 🧳 Tourify — Backend API
 
-Hệ thống đặt tour du lịch trực tuyến, cho phép khách hàng tìm kiếm và đặt tour mà **không cần đăng nhập**, trong khi quản trị viên quản lý toàn bộ nội dung (tour, danh mục, đơn hàng...) qua khu vực có xác thực JWT. Được xây dựng với Node.js 22, NestJS 11, TypeScript, Prisma 7 và MySQL, có tích hợp thanh toán ZaloPay.
+[🇻🇳 Tiếng Việt](https://github.com/vvcuong-dev/tourify-backend/blob/main/README.vi.md)
 
-## 📋 Mục Lục
+An online tour booking system that lets customers search and book tours **without needing an account**, while administrators manage all content (tours, categories, orders...) through a JWT-protected area. Built with Node.js 22, NestJS 11, TypeScript, Prisma 7, and MySQL, with ZaloPay payment integration.
 
-- [Tính Năng](#-tính-năng)
+## 📋 Table of Contents
+
+- [Features](#-features)
 - [Tech Stack](#️-tech-stack)
-- [Kiến Trúc](#️-kiến-trúc)
-- [Bắt Đầu](#-bắt-đầu)
-- [Biến Môi Trường](#-biến-môi-trường)
-- [Cơ Sở Dữ Liệu](#️-cơ-sở-dữ-liệu)
+- [Architecture](#️-architecture)
+- [Getting Started](#-getting-started)
+- [Environment Variables](#-environment-variables)
+- [Database](#️-database)
 - [API Endpoints](#-api-endpoints)
-- [Xác Thực & Phân Quyền](#-xác-thực--phân-quyền)
-- [Các Quyết Định Thiết Kế](#-các-quyết-định-thiết-kế)
-- [Cấu Trúc Dự Án](#-cấu-trúc-dự-án)
-- [Lệnh Scripts](#-lệnh-scripts)
+- [Authentication & Authorization](#-authentication--authorization)
+- [Key Design Decisions](#-key-design-decisions)
+- [Project Structure](#-project-structure)
+- [Scripts](#-scripts)
 - [License](#-license)
 
-## ✨ Tính Năng
+## ✨ Features
 
-### Khách hàng (không cần tài khoản)
+### Customers (no account required)
 
-- **Duyệt & tìm kiếm tour** — theo danh mục, thành phố/địa điểm, khoảng giá, ngày khởi hành
-- **Xem chi tiết tour** — hình ảnh, lịch trình (schedule), giá theo người lớn/trẻ em/em bé, số chỗ còn lại
-- **Giỏ hàng phía client** — giỏ hàng lưu ở frontend (localStorage); backend chỉ tính lại giá và kiểm tra tồn kho tại thời điểm đặt để tránh sai lệch giá
-- **Đặt tour (guest checkout)** — nhập thông tin (họ tên, email, SĐT, ghi chú) mà không cần tạo tài khoản
-- **Thanh toán** — Tiền mặt, Chuyển khoản, hoặc ZaloPay (redirect + callback cập nhật trạng thái tự động)
-- **Tra cứu đơn hàng** — theo mã đơn hàng (order code)
+- **Browse & search tours** — by category, city/location, price range, departure date
+- **View tour and category details** — via SEO-friendly slugs, with breadcrumb and page title
+- **List cities/locations** — used to filter tours
+- **Client-side cart** — the cart is kept on the frontend (localStorage); the backend only recalculates price and checks stock at checkout time to prevent price mismatches
+- **Book a tour (guest checkout)** — enter details (full name, email, phone, note) with no account needed
+- **Payment** — Cash, Bank Transfer, or ZaloPay (redirect + callback automatically updates status)
+- **Order lookup** — by order code + email
 
-### Quản trị viên (yêu cầu đăng nhập)
+### Administrators (login required)
 
-- **Xác thực** — JWT access/refresh token, đổi mật khẩu, đổi email
-- **Quản lý tài khoản quản trị** — CRUD, cập nhật trạng thái (ACTIVE/PENDING/INACTIVE/BANNED)
-- **Quản lý danh mục** — dạng cây (parent/children), sắp xếp vị trí, bật/tắt hàng loạt
-- **Quản lý tour** — CRUD, upload nhiều ảnh (Cloudinary), quản lý lịch trình, giá & tồn kho theo từng loại khách, bật/tắt hàng loạt
-- **Quản lý thành phố/địa điểm** — gắn với tour qua bảng quan hệ nhiều-nhiều
-- **Quản lý đơn hàng** — xem danh sách, chi tiết, cập nhật trạng thái đơn (INITIAL → DONE / CANCEL)
+- **Auth** — register, login, refresh token, logout, change password, change email
+- **Profile** — view/update own profile, change avatar (Cloudinary)
+- **Admin account management** — CRUD, status updates (ACTIVE/PENDING/INACTIVE/BANNED)
+- **Category management** — tree structure (parent/children), image upload, position ordering, bulk enable/disable, soft delete
+- **Tour management** — CRUD, avatar + multiple image uploads, schedule management, pricing & stock per passenger type, bulk enable/disable, soft delete
+- **Order management** — list, view details, update order status (INITIAL → DONE / CANCEL)
 
 ## 🛠️ Tech Stack
 
-| Tầng            | Công nghệ                                                        |
-| --------------- | ---------------------------------------------------------------- |
-| Runtime         | Node.js 22                                                       |
-| Ngôn ngữ        | TypeScript 5.9                                                   |
-| Framework       | NestJS 11 (trên nền Express)                                     |
-| Cơ sở dữ liệu   | MySQL 9 (qua Docker)                                             |
-| ORM             | Prisma 7 (`@prisma/adapter-mariadb`)                             |
-| Cache / Session | Redis 8                                                          |
-| Xác thực        | JWT (`@nestjs/jwt`, `passport-jwt`) + bcrypt                     |
-| Validation      | class-validator, class-transformer                               |
-| Upload ảnh      | Cloudinary                                                       |
-| Thanh toán      | ZaloPay (sandbox)                                                |
-| Docs            | Swagger (`@nestjs/swagger`)                                      |
-| Package Mgr     | pnpm                                                             |
-| Testing         | Jest, Supertest _(sẽ bổ sung sau — hiện repo chưa có unit test)_ |
+| Layer           | Technology                                                            |
+| --------------- | --------------------------------------------------------------------- |
+| Runtime         | Node.js 22                                                            |
+| Language        | TypeScript 5.9                                                        |
+| Framework       | NestJS 11 (on top of Express)                                         |
+| Database        | MySQL 9 (via Docker)                                                  |
+| ORM             | Prisma 7 (`@prisma/adapter-mariadb`)                                  |
+| Cache / Session | Redis 8                                                               |
+| Auth            | JWT (`@nestjs/jwt`, `passport-jwt`) + bcrypt                          |
+| Validation      | class-validator, class-transformer                                    |
+| Image upload    | Cloudinary                                                            |
+| Payment         | ZaloPay (sandbox)                                                     |
+| Docs            | Swagger (`@nestjs/swagger`)                                           |
+| Package Mgr     | pnpm                                                                  |
+| Testing         | Jest, Supertest _(to be added later — no unit tests in the repo yet)_ |
 
-## 🏗️ Kiến Trúc
+## 🏗️ Architecture
 
 ```
 Client Request
@@ -89,69 +92,67 @@ Client Request
        └─────────┘ └─────────┘
 ```
 
-Mỗi module nghiệp vụ chính (`tour`, `category`, `order`, `payment`) có **hai lớp controller/service**: một dành cho **quản trị** (yêu cầu JWT, đầy đủ CRUD) và một dành cho **client** (`*-client`, công khai, chỉ đọc hoặc thao tác giới hạn như đặt tour).
+The core business modules (`tour`, `category`, `order`) each have **two separate controllers/services**: one for **admin** (`@Controller('admin/...')` + `@UseGuards(JwtAuthGuard)`, full CRUD) and one for **client** (`*-client`, `@Controller('...')` without the `admin` prefix, public, read-only or limited actions like placing a booking). `cart`, `city`, and `payment` each have a single controller and are all public.
 
-## 🚀 Bắt Đầu
+## 🚀 Getting Started
 
-### Yêu cầu
+### Prerequisites
 
 - Docker & Docker Compose
 - Node.js 22+
 - pnpm
 
-### 1. Khởi chạy hạ tầng (MySQL + phpMyAdmin + Redis)
+### 1. Start the infrastructure (MySQL + phpMyAdmin + Redis)
 
-Dự án tách hạ tầng ra 2 docker-compose riêng (đặt ngoài thư mục backend):
+MySQL, phpMyAdmin, and Redis are defined in a single `docker-compose.yml` at the project root:
 
 ```bash
-# Thư mục chứa MySQL + phpMyAdmin
-cd mysql-database
-docker compose up -d
-
-# Thư mục chứa Redis
-cd ../redis-database
 docker compose up -d
 ```
 
-> 💡 Có thể gộp 2 file này thành 1 `docker-compose.yml` duy nhất trong thư mục `infra/` nếu muốn quản lý tập trung — xem gợi ý ở cuối README.
+This starts:
 
-### 2. Cài đặt & chạy backend
+- **MySQL** — `localhost:3307`
+- **phpMyAdmin** — `http://localhost:8080`
+- **Redis** — `localhost:6379`
+
+### 2. Install & run the backend
 
 ```bash
 cd tourify-backend
 
-# 1. Cài dependencies
+# 1. Install dependencies
 pnpm install
 
-# 2. Tạo file môi trường
+# 2. Create the environment file
 cp .env.example .env
-# → chỉnh sửa các giá trị cho phù hợp (xem mục Biến Môi Trường)
+# → edit the values as needed (see Environment Variables)
 
-# 3. Chạy migration
+# 3. Run migrations
 pnpm prisma migrate dev
 
-# 4. (tuỳ chọn) Generate lại Prisma Client
+# 4. (optional) Regenerate the Prisma Client
 pnpm prisma generate
 
-# 5. Khởi chạy dev server (hot reload)
+# 5. Start the dev server (hot reload)
 pnpm start:dev
 ```
 
-API sẽ chạy tại `http://localhost:3000` và Swagger docs tại `http://localhost:3000/api` _(tuỳ đường dẫn cấu hình trong `main.ts`)_.
+The API will run at `http://localhost:3000` and Swagger docs at `http://localhost:3000/api` _(depending on the path configured in `main.ts`)_.
 
-### ⚠️ Lưu ý khi test thanh toán ZaloPay (local)
+### ⚠️ Note when testing ZaloPay payments (local)
 
-ZaloPay cần gọi callback về server của bạn, nên khi chạy local **bắt buộc phải expose qua ngrok** (hoặc tunnel tương đương):
+ZaloPay needs to call back to your server, so when running locally you **must expose it via ngrok** (or an equivalent tunnel):
 
 ```bash
 ngrok http 3000
 ```
 
-Sau đó cập nhật biến `DOMAIN_WEBSITE` trong `.env` bằng domain ngrok vừa tạo (đổi mỗi lần restart ngrok bản free), rồi khởi động lại server để ZaloPay callback hoạt động đúng.
+Then update the `DOMAIN_WEBSITE` variable in `.env` with the new ngrok domain (it changes every time you restart the free ngrok plan), and restart the server for the ZaloPay callback to work correctly.
 
-## 🔧 Biến Môi Trường
+## 🔧 Environment Variables
 
-Tạo file `.env` từ `.env.example`:
+Create a `.env` file from `.env.example`:
 
 ```dotenv
 # Server
@@ -185,33 +186,33 @@ ZALOPAY_ENDPOINT="https://sb-openapi.zalopay.vn/v2/create"
 DOMAIN_WEBSITE="https://<your-ngrok-domain>.ngrok-free.app"
 ```
 
-⚠️ **Quan trọng:** không commit file `.env` thật (chứa secret) lên Git — chỉ commit `.env.example` với giá trị giả. `DOMAIN_WEBSITE` cần cập nhật lại mỗi khi domain ngrok thay đổi.
+⚠️ **Important:** never commit a real `.env` file (with secrets) to Git — only commit `.env.example` with placeholder values. `DOMAIN_WEBSITE` needs to be updated every time the ngrok domain changes.
 
-## 🗃️ Cơ Sở Dữ Liệu
+## 🗃️ Database
 
-### Bảng (8 bảng)
+### Tables (8 total)
 
-| Bảng             | Mô tả                                                              |
+| Table            | Description                                                        |
 | ---------------- | ------------------------------------------------------------------ |
-| `users`          | Tài khoản quản trị viên (khách hàng không có tài khoản)            |
-| `categories`     | Danh mục tour, dạng cây (tự tham chiếu parent/children)            |
-| `cities`         | Thành phố / địa điểm                                               |
-| `tours`          | Thông tin tour: giá, tồn kho, lịch trình, trạng thái               |
-| `tour_images`    | Ảnh của tour (nhiều ảnh/tour, lưu trên Cloudinary)                 |
-| `tour_locations` | Quan hệ nhiều-nhiều giữa `tours` và `cities`                       |
-| `orders`         | Đơn đặt tour (guest checkout — lưu trực tiếp thông tin khách)      |
-| `order_items`    | Chi tiết từng tour trong đơn hàng (snapshot giá tại thời điểm đặt) |
+| `users`          | Admin accounts (customers don't have accounts)                     |
+| `categories`     | Tour categories, tree structure (self-referencing parent/children) |
+| `cities`         | Cities / locations                                                 |
+| `tours`          | Tour info: pricing, stock, schedule, status                        |
+| `tour_images`    | Tour images (multiple per tour, stored on Cloudinary)              |
+| `tour_locations` | Many-to-many relation between `tours` and `cities`                 |
+| `orders`         | Tour bookings (guest checkout — customer info stored directly)     |
+| `order_items`    | Line items per booking (price snapshot at booking time)            |
 
-### Quan hệ chính
+### Key relationships
 
-- `Category` tự tham chiếu (`parent` / `children`) để tạo cây danh mục
-- `Tour` thuộc 1 `Category`, có nhiều `TourImage`, và liên kết nhiều `City` qua `TourLocation`
-- `Order` có nhiều `OrderItem`; mỗi `OrderItem` **lưu snapshot** giá & số lượng theo loại khách (adult/children/baby) tại thời điểm đặt — không phụ thuộc giá `Tour` thay đổi sau này
-- Soft delete (`deleted`, `deletedBy`) áp dụng cho `Category`, `Tour`, `User`
+- `Category` is self-referencing (`parent` / `children`) to form a category tree
+- `Tour` belongs to one `Category`, has many `TourImage`, and links to many `City` via `TourLocation`
+- `Order` has many `OrderItem`; each `OrderItem` **stores a snapshot** of price and quantity per passenger type (adult/children/baby) at booking time — independent of later `Tour` price changes
+- Soft delete (`deleted`, `deletedBy`) applies to `Category`, `Tour`, `User`
 
 ### Enums
 
-| Enum             | Giá trị                           |
+| Enum             | Values                            |
 | ---------------- | --------------------------------- |
 | `UserStatus`     | ACTIVE, PENDING, INACTIVE, BANNED |
 | `CategoryStatus` | ACTIVE, INACTIVE                  |
@@ -220,184 +221,214 @@ DOMAIN_WEBSITE="https://<your-ngrok-domain>.ngrok-free.app"
 | `PaymentMethod`  | CASH, ZALOPAY, BANK_TRANSFER      |
 | `PaymentStatus`  | UNPAID, PAID                      |
 
-### Migration
+### Migrations
 
 ```bash
-pnpm prisma migrate dev --name <ten_migration>
+pnpm prisma migrate dev --name <migration_name>
 ```
 
 ## 📡 API Endpoints
 
-> Danh sách dưới đây tổng hợp theo module — kiểm tra lại path/method chính xác trong từng `*.controller.ts` khi viết Swagger.
+**31 endpoints** in total, split between the **Admin** area (`/admin/...`, JWT required) and **Public** area (no `/admin` prefix, serves anonymous visitors).
 
-### Auth (`/auth`)
+### Auth (`/admin/auth`) — 6 endpoints
 
-| Method | Endpoint                | Quyền  | Mô tả                      |
-| ------ | ----------------------- | ------ | -------------------------- |
-| POST   | `/auth/register`        | Public | Đăng ký tài khoản quản trị |
-| POST   | `/auth/login`           | Public | Đăng nhập, trả về cặp JWT  |
-| POST   | `/auth/refresh`         | Public | Làm mới access token       |
-| PATCH  | `/auth/change-password` | Auth   | Đổi mật khẩu               |
-| PATCH  | `/auth/change-email`    | Auth   | Đổi email                  |
+| Method | Endpoint                      | Access | Description                |
+| ------ | ----------------------------- | ------ | -------------------------- |
+| POST   | `/admin/auth/register`        | Public | Register an admin account  |
+| POST   | `/admin/auth/login`           | Public | Log in, returns a JWT pair |
+| POST   | `/admin/auth/refresh-token`   | Public | Refresh the access token   |
+| POST   | `/admin/auth/logout`          | Auth   | Log out                    |
+| PATCH  | `/admin/auth/change-password` | Auth   | Change password            |
+| PATCH  | `/admin/auth/change-email`    | Auth   | Change email               |
 
-### Users (`/users`) — Auth (Admin)
+### Users (`/admin/users`) — Auth — 8 endpoints
 
-CRUD tài khoản quản trị, cập nhật trạng thái, tìm kiếm/phân trang.
+| Method | Endpoint               | Description                           |
+| ------ | ---------------------- | ------------------------------------- |
+| GET    | `/admin/users/profile` | Get own profile                       |
+| PATCH  | `/admin/users/profile` | Update own profile                    |
+| POST   | `/admin/users/avatar`  | Change own avatar (Cloudinary upload) |
+| GET    | `/admin/users`         | List users (paginated, filterable)    |
+| GET    | `/admin/users/:id`     | Get user details                      |
+| POST   | `/admin/users`         | Create a new user                     |
+| PATCH  | `/admin/users/:id`     | Update a user                         |
+| DELETE | `/admin/users/:id`     | Soft-delete a user                    |
 
-### Category
+### Categories
 
-| Khu vực | Endpoint             | Quyền  | Mô tả                                    |
-| ------- | -------------------- | ------ | ---------------------------------------- |
-| Admin   | `/categories`        | Auth   | CRUD danh mục, đổi trạng thái hàng loạt  |
-| Client  | `/client/categories` | Public | Lấy danh mục dạng cây/danh sách hiển thị |
+**Admin (`/admin/categories`) — Auth — 7 endpoints**
 
-### City (`/cities`) — Auth (Admin)
+| Method | Endpoint                         | Description                         |
+| ------ | -------------------------------- | ----------------------------------- |
+| GET    | `/admin/categories`              | List categories (filter, paginated) |
+| GET    | `/admin/categories/tree`         | Get categories as a tree            |
+| GET    | `/admin/categories/:id`          | Get category details by id          |
+| POST   | `/admin/categories`              | Create a category                   |
+| POST   | `/admin/categories/:id/image`    | Upload category image               |
+| PATCH  | `/admin/categories/change-multi` | Bulk status update                  |
+| PATCH  | `/admin/categories/:id`          | Update a category                   |
+| DELETE | `/admin/categories/:id`          | Soft-delete a category              |
 
-CRUD thành phố/địa điểm để gắn vào tour.
+**Client (`/categories`) — Public — 1 endpoint**
 
-### Tour
+| Method | Endpoint            | Description                  |
+| ------ | ------------------- | ---------------------------- |
+| GET    | `/categories/:slug` | Get category details by slug |
 
-| Khu vực | Endpoint        | Quyền  | Mô tả                                                               |
-| ------- | --------------- | ------ | ------------------------------------------------------------------- |
-| Admin   | `/tours`        | Auth   | CRUD tour, upload ảnh, quản lý lịch trình, đổi trạng thái hàng loạt |
-| Client  | `/client/tours` | Public | Danh sách, tìm kiếm, chi tiết tour theo slug                        |
+### Cities (`/cities`) — Public — 1 endpoint
 
-### Cart (`/cart`) — Public
+| Method | Endpoint  | Description               |
+| ------ | --------- | ------------------------- |
+| GET    | `/cities` | List all cities/locations |
 
-| Method | Endpoint | Mô tả                                                                       |
-| ------ | -------- | --------------------------------------------------------------------------- |
-| POST   | `/cart`  | Nhận danh sách tour + số lượng từ frontend, tính lại giá & kiểm tra tồn kho |
+### Tours
 
-### Order
+**Admin (`/admin/tours`) — Auth — 9 endpoints**
 
-| Khu vực | Endpoint         | Quyền  | Mô tả                                         |
-| ------- | ---------------- | ------ | --------------------------------------------- |
-| Client  | `/client/orders` | Public | Tạo đơn (guest checkout), tra cứu đơn theo mã |
-| Admin   | `/orders`        | Auth   | Danh sách, chi tiết, cập nhật trạng thái đơn  |
+| Method | Endpoint                           | Description                    |
+| ------ | ---------------------------------- | ------------------------------ |
+| GET    | `/admin/tours`                     | List tours (filter, paginated) |
+| GET    | `/admin/tours/:id`                 | Get tour details by id         |
+| POST   | `/admin/tours`                     | Create a tour                  |
+| PATCH  | `/admin/tours/change-multi`        | Bulk status update             |
+| PATCH  | `/admin/tours/:id`                 | Update a tour                  |
+| DELETE | `/admin/tours/:id`                 | Soft-delete a tour             |
+| POST   | `/admin/tours/:id/avatar`          | Upload tour avatar image       |
+| POST   | `/admin/tours/:id/images`          | Upload multiple tour images    |
+| DELETE | `/admin/tours/:id/images/:imageId` | Delete a tour image            |
 
-### Payment (`/payment`) — Public
+**Client (`/tours`) — Public — 2 endpoints**
 
-| Method | Endpoint                    | Mô tả                                          |
-| ------ | --------------------------- | ---------------------------------------------- |
-| POST   | `/payment/zalopay/create`   | Tạo giao dịch ZaloPay, trả về link thanh toán  |
-| POST   | `/payment/zalopay/callback` | Webhook ZaloPay cập nhật trạng thái thanh toán |
+| Method | Endpoint        | Description                                             |
+| ------ | --------------- | ------------------------------------------------------- |
+| GET    | `/tours/search` | Public tour search (filter by category, city, price...) |
+| GET    | `/tours/:slug`  | Get tour details by slug, with breadcrumb + city list   |
 
-## 🔐 Xác Thực & Phân Quyền
+### Cart (`/cart`) — Public — 1 endpoint
+
+| Method | Endpoint       | Description                                                                          |
+| ------ | -------------- | ------------------------------------------------------------------------------------ |
+| POST   | `/cart/detail` | Accepts a list of items (tourId, quantity...), returns computed cart pricing details |
+
+### Orders
+
+**Client (`/orders`) — Public — 2 endpoints**
+
+| Method | Endpoint                    | Description                            |
+| ------ | --------------------------- | -------------------------------------- |
+| POST   | `/orders`                   | Create a new order (guest checkout)    |
+| GET    | `/orders?orderCode=&email=` | Look up an order by order code + email |
+
+**Admin (`/admin/orders`) — Auth — 3 endpoints**
+
+| Method | Endpoint            | Description                     |
+| ------ | ------------------- | ------------------------------- |
+| GET    | `/admin/orders`     | List orders (filter, paginated) |
+| GET    | `/admin/orders/:id` | Get order details               |
+| PATCH  | `/admin/orders/:id` | Update order status             |
+
+### Payment (`/payment`) — Public — 2 endpoints
+
+| Method | Endpoint                    | Description                                                  |
+| ------ | --------------------------- | ------------------------------------------------------------ |
+| POST   | `/payment/zalopay/create`   | Create a ZaloPay transaction, returns a payment link         |
+| POST   | `/payment/zalopay/callback` | ZaloPay webhook that updates payment status (`data` + `mac`) |
+
+## 🔐 Authentication & Authorization
 
 ```
-Đăng nhập (Admin) → Access Token (15 phút) + Refresh Token (7 ngày)
+Admin login → Access Token (15 min) + Refresh Token (7 days)
                 │
                 ▼
-  Access Token hết hạn → Gọi /auth/refresh → Access Token mới
+  Access Token expires → Call /admin/auth/refresh-token → New Access Token
+                │
+                ▼
+     Logout → Call /admin/auth/logout → Access token invalidated
 ```
 
-- **Access Token:** sống ngắn (15 phút), gửi qua header `Authorization: Bearer <token>`
-- **Refresh Token:** sống dài (7 ngày)
-- **JwtAuthGuard** (`common/guards/jwt-auth.guard.ts`) bảo vệ toàn bộ route quản trị; các route `*-client` không dùng guard này vì phục vụ khách vãng lai
-- Không có hệ thống role đa cấp (OWNER/CASHIER/...) như một số hệ thống khác — `User` hiện chỉ đại diện cho **tài khoản quản trị**, phân biệt qua `status` chứ chưa có field `role` riêng
+- **Access Token:** short-lived (15 min), sent via the `Authorization: Bearer <token>` header
+- **Refresh Token:** long-lived (7 days)
+- **JwtAuthGuard** (`common/guards/jwt-auth.guard.ts`) is applied per controller (`@UseGuards(JwtAuthGuard)`) to all routes under `/admin/...`; the `*-client` controllers (`categories`, `tours`, `orders`, `cart`, `payment`, `cities`) don't use this guard since they serve anonymous visitors
+- There's no multi-tier role system (OWNER/CASHIER/...) like in some other systems — `User` currently only represents **admin accounts**, distinguished by `status` rather than a dedicated `role` field
 
-## 🎯 Các Quyết Định Thiết Kế
+## 🎯 Key Design Decisions
 
-| Quyết định                                                  | Lý do                                                                                                   |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Khách hàng không cần tài khoản                              | Giảm ma sát khi đặt tour — tăng tỉ lệ chuyển đổi                                                        |
-| `Order` lưu trực tiếp thông tin khách (không FK đến `User`) | Vì không có tài khoản khách hàng, `User` chỉ dành cho quản trị                                          |
-| Giỏ hàng lưu ở frontend (localStorage)                      | Đơn giản hoá backend; backend chỉ là nguồn chân lý (source of truth) về giá & tồn kho tại thời điểm đặt |
-| `OrderItem` snapshot giá tại thời điểm đặt                  | Tránh sai lệch khi giá `Tour` thay đổi sau khi khách đã đặt                                             |
-| Tách controller Admin / Client (`*-client`)                 | Phân tách rõ route công khai và route cần xác thực, tránh nhầm lẫn quyền truy cập                       |
-| Category dạng cây tự tham chiếu                             | Hỗ trợ danh mục cha/con linh hoạt                                                                       |
-| Soft delete (`deleted` flag)                                | Giữ lại dữ liệu lịch sử, không xoá cứng khỏi DB                                                         |
-| ZaloPay cần domain public (ngrok khi dev)                   | Callback thanh toán yêu cầu server có thể truy cập từ internet                                          |
+| Decision                                                | Rationale                                                                                          |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Customers don't need an account                         | Reduces friction when booking — increases conversion rate                                          |
+| `Order` stores customer info directly (no FK to `User`) | Since there's no customer account, `User` is admin-only                                            |
+| Cart lives on the frontend (localStorage)               | Simplifies the backend; the backend is the source of truth for price & stock only at checkout time |
+| `OrderItem` snapshots price at booking time             | Prevents mismatches if `Tour` prices change after a customer has booked                            |
+| Split Admin / Client controllers (`*-client`)           | Clearly separates public routes from routes requiring auth, avoiding access-control confusion      |
+| Self-referencing category tree                          | Supports flexible parent/child categories                                                          |
+| Soft delete (`deleted` flag)                            | Preserves historical data instead of hard-deleting from the DB                                     |
+| ZaloPay requires a public domain (ngrok in dev)         | Payment callbacks require a server reachable from the internet                                     |
 
-## 📁 Cấu Trúc Dự Án
+## 📁 Project Structure
 
 ```
 tourify-backend/
 ├── src/
 │   ├── app.module.ts
 │   ├── main.ts
-│   ├── common/                 # DTO dùng chung, guard, exception, enum, type
-│   ├── configs/                # Cấu hình app, database, jwt, redis, cloudinary, zalopay
-│   ├── constants/               # Hằng số (cache key, error code, upload...)
-│   ├── generated/prisma/        # Prisma Client được generate
+│   ├── common/                 # Shared DTOs, guards, exceptions, enums, types
+│   ├── configs/                # App, database, jwt, redis, cloudinary, zalopay config
+│   ├── constants/               # Constants (cache keys, error codes, upload...)
+│   ├── generated/prisma/        # Generated Prisma Client
 │   ├── modules/
-│   │   ├── auth/                # Đăng nhập, đăng ký, refresh token
-│   │   ├── user/                # Quản lý tài khoản quản trị
-│   │   ├── category/            # Danh mục (admin + client)
-│   │   ├── city/                # Thành phố/địa điểm
-│   │   ├── tour/                # Tour (admin + client)
-│   │   ├── cart/                # Tính giá giỏ hàng
-│   │   ├── order/                # Đơn hàng (admin + client)
+│   │   ├── auth/                # Login, register, refresh token
+│   │   ├── user/                # Admin account management
+│   │   ├── category/            # Categories (admin + client)
+│   │   ├── city/                # Cities/locations (public, read-only)
+│   │   ├── tour/                # Tours (admin + client)
+│   │   ├── cart/                # Cart price calculation
+│   │   ├── order/                # Orders (admin + client)
 │   │   ├── payment/              # ZaloPay
-│   │   ├── cloudinary/           # Upload ảnh
+│   │   ├── cloudinary/           # Image upload
 │   │   ├── redis/                # Cache service
-│   │   └── token/                # Quản lý refresh token
-│   ├── passports/                # Chiến lược Passport JWT
+│   │   └── token/                # Refresh token management
+│   ├── passports/                # Passport JWT strategy
 │   ├── prisma/
 │   │   ├── schema.prisma
-│   │   ├── models/                # Định nghĩa từng model (tách file)
-│   │   ├── enums/                  # Định nghĩa từng enum (tách file)
+│   │   ├── models/                # Model definitions (split per file)
+│   │   ├── enums/                  # Enum definitions (split per file)
 │   │   └── migrations/
-│   └── utils/                     # Helper: slug, order-code, password, multer...
-├── docker-compose.yml (đề xuất gộp — xem bên dưới)
+│   └── utils/                     # Helpers: slug, order-code, password, multer...
+├── docker-compose.yml           # MySQL + phpMyAdmin + Redis
 ├── .env.example
 ├── package.json
 └── tsconfig.json
 ```
 
-## 📜 Lệnh Scripts
+## 📜 Scripts
 
-| Lệnh                      | Mô tả                               |
-| ------------------------- | ----------------------------------- |
-| `pnpm start:dev`          | Khởi chạy dev server với hot reload |
-| `pnpm build`              | Build ra thư mục `dist/`            |
-| `pnpm start:prod`         | Chạy bản production đã build        |
-| `pnpm lint`               | Kiểm tra & tự sửa lỗi ESLint        |
-| `pnpm format`             | Format code với Prettier            |
-| `pnpm prisma migrate dev` | Chạy migration                      |
-| `pnpm prisma generate`    | Generate lại Prisma Client          |
-| `pnpm prisma studio`      | Mở giao diện xem/sửa dữ liệu        |
+| Command                   | Description                          |
+| ------------------------- | ------------------------------------ |
+| `pnpm start:dev`          | Start the dev server with hot reload |
+| `pnpm build`              | Build to `dist/`                     |
+| `pnpm start:prod`         | Run the built production bundle      |
+| `pnpm lint`               | Check & auto-fix ESLint issues       |
+| `pnpm format`             | Format code with Prettier            |
+| `pnpm prisma migrate dev` | Run migrations                       |
+| `pnpm prisma generate`    | Regenerate the Prisma Client         |
+| `pnpm prisma studio`      | Open the data browser/editor UI      |
 
-> `pnpm test` hiện chưa cấu hình đầy đủ do các file `*.spec.ts` đã được gỡ bỏ tạm thời — sẽ bổ sung khi viết unit test.
+> `pnpm test` isn't fully configured yet since the `*.spec.ts` files were temporarily removed — will be added back once unit tests are written.
 
-## 🐳 Gợi ý gộp Docker Compose
+## 🐳 Docker
 
-Hiện hạ tầng đang tách 2 file compose riêng (`mysql-database/`, `redis-database/`). Có thể gộp thành 1 file trong thư mục gốc dự án để dễ quản lý:
-
-```yaml
+```
 services:
-  mysql:
-    image: mysql:9
-    container_name: tourify-db
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-    ports:
-      - '3307:3306'
-    volumes:
-      - db_data:/var/lib/mysql
+  mysql        → localhost:3307  (root / 123456)
+  phpmyadmin   → http://localhost:8080
+  redis        → localhost:6379
+```
 
-  phpmyadmin:
-    image: phpmyadmin
-    container_name: tourify-phpmyadmin
-    restart: always
-    ports:
-      - '8080:80'
-    environment:
-      - PMA_ARBITRARY=1
-
-  redis:
-    image: redis:8
-    container_name: tourify-redis
-    restart: always
-    ports:
-      - '6379:6379'
-    volumes:
-      - redis_data:/data
-
-volumes:
-  db_data:
-  redis_data:
+```bash
+docker compose up -d          # start all services
+docker compose down           # stop all services
+docker compose down -v        # stop and wipe volumes (reset data)
 ```
 
 ## 📄 License
