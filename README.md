@@ -1,6 +1,6 @@
-**🧳 Tourify — Backend API**
+## 🧳 Tourify — Backend API
 
-[🇻🇳 Tiếng Việt](https://github.com/vvcuong-dev/tourify-backend/blob/main/Readme.vi.md)
+[🇻🇳 Tiếng Việt](https://github.com/vvcuong-dev/tourify-backend/blob/main/README.vi.md)
 
 An online tour booking system that lets customers search and book tours **without needing an account**, while administrators manage all content (tours, categories, orders...) through a JWT-protected area. Built with Node.js 22, NestJS 11, TypeScript, Prisma 7, and MySQL, with ZaloPay payment integration.
 
@@ -117,8 +117,8 @@ pnpm install
 cp .env.example .env
 # → edit the values as needed (see Environment Variables)
 
-# 3. Run migrations
-pnpm prisma migrate dev
+# 3. Sync the schema to the database (db push, no migration files)
+pnpm prisma db push
 
 # 4. (optional) Regenerate the Prisma Client
 pnpm prisma generate
@@ -127,7 +127,7 @@ pnpm prisma generate
 pnpm start:dev
 ```
 
-The API will run at `http://localhost:3000` and Swagger docs at `http://localhost:3000/api` _(depending on the path configured in `main.ts`)_.
+The API will run at `http://localhost:3000`, all routes are prefixed with `/api` (configured via `app.setGlobalPrefix('api')` in `main.ts`), and Swagger docs are available at `http://localhost:3000/api/docs`.
 
 ### ⚠️ Note when testing ZaloPay payments (local)
 
@@ -219,6 +219,8 @@ pnpm prisma migrate dev --name <migration_name>
 ## 📡 API Endpoints
 
 **31 endpoints** in total, split between the **Admin** area (`/admin/...`, JWT required) and **Public** area (no `/admin` prefix, serves anonymous visitors).
+
+> **Base URL:** `http://localhost:3000/api` — all paths below are relative to this base (e.g. `/admin/auth/login` → `http://localhost:3000/api/admin/auth/login`).
 
 ### Auth (`/admin/auth`) — 6 endpoints
 

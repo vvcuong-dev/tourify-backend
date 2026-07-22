@@ -1,4 +1,4 @@
-**🧳 Tourify — Backend API**
+## 🧳 Tourify — Backend API
 
 [🇬🇧 English](https://github.com/vvcuong-dev/tourify-backend/blob/main/README.md)
 
@@ -117,8 +117,8 @@ pnpm install
 cp .env.example .env
 # → chỉnh sửa các giá trị cho phù hợp (xem mục Biến Môi Trường)
 
-# 3. Chạy migration
-pnpm prisma migrate dev
+# 3. Đồng bộ schema lên database (db push, không dùng migration file)
+pnpm prisma db push
 
 # 4. (tuỳ chọn) Generate lại Prisma Client
 pnpm prisma generate
@@ -127,7 +127,7 @@ pnpm prisma generate
 pnpm start:dev
 ```
 
-API sẽ chạy tại `http://localhost:3000` và Swagger docs tại `http://localhost:3000/api` _(tuỳ đường dẫn cấu hình trong `main.ts`)_.
+API sẽ chạy tại `http://localhost:3000`, toàn bộ route đều có prefix `/api` (cấu hình qua `app.setGlobalPrefix('api')` trong `main.ts`), và Swagger docs tại `http://localhost:3000/api/docs`.
 
 ### ⚠️ Lưu ý khi test thanh toán ZaloPay (local)
 
@@ -219,6 +219,8 @@ pnpm prisma migrate dev --name <ten_migration>
 ## 📡 API Endpoints
 
 Tổng cộng **31 endpoints**, chia làm khu vực **Admin** (`/admin/...`, yêu cầu JWT) và **Public** (không có prefix `/admin`, phục vụ khách vãng lai).
+
+> **Base URL:** `http://localhost:3000/api` — các path bên dưới đều là path tương đối so với base này (vd `/admin/auth/login` → `http://localhost:3000/api/admin/auth/login`).
 
 ### Auth (`/admin/auth`) — 6 endpoints
 
