@@ -62,34 +62,23 @@ An online tour booking system that lets customers search and book tours **withou
 
 ```
 Client Request
-     │
-     ▼
-┌─────────────────────────────────────────────┐
-│  NestJS App                                  │
-│  ┌───────────┐  ┌────────────┐  ┌─────────┐ │
-│  │ Middleware │→ │ Controller │→ │ Pipe    │ │
-│  │ (Guard,    │  │ (Admin /   │  │ (Zod/   │ │
-│  │  JwtAuth)  │  │  *-Client) │  │  class- │ │
-│  │            │  │            │  │validator)│ │
-│  └───────────┘  └─────┬──────┘  └─────────┘ │
-│                       │                      │
-│                       ▼                      │
-│                 ┌──────────┐                 │
-│                 │  Service  │  (Business     │
-│                 └─────┬────┘   Logic)        │
-│                       │                      │
-│           ┌───────────┼────────────┐         │
-│           ▼           ▼            ▼         │
-│      ┌─────────┐ ┌─────────┐ ┌───────────┐   │
-│      │ Prisma  │ │  Redis  │ │Cloudinary/│   │
-│      │ Client  │ │ Service │ │  ZaloPay  │   │
-│      └────┬────┘ └────┬────┘ └───────────┘   │
-└───────────┼───────────┼───────────────────────┘
-            ▼           ▼
-       ┌─────────┐ ┌─────────┐
-       │ MySQL 9 │ │ Redis 8 │
-       │ (Docker)│ │ (Docker)│
-       └─────────┘ └─────────┘
+      │
+      ▼
+┌─────────────────────────────────────────────────────┐
+│                     NestJS App                      │
+│                                                     │
+│    Controller -> Service -> Repository (Prisma)     │
+│    (Admin / *-Client, JwtAuthGuard where needed)    │
+│                                                     │
+│            Service layer also talks to:             │
+│    Redis (cache) - Cloudinary (upload) - ZaloPay    │
+└─────────────────────────────────────────────────────┘
+      │
+      ▼
+┌───────────────┐   ┌───────────────┐
+│   MySQL 9     │   │   Redis 8     │
+│   (Docker)    │   │   (Docker)    │
+└───────────────┘   └───────────────┘
 ```
 
 The core business modules (`tour`, `category`, `order`) each have **two separate controllers/services**: one for **admin** (`@Controller('admin/...')` + `@UseGuards(JwtAuthGuard)`, full CRUD) and one for **client** (`*-client`, `@Controller('...')` without the `admin` prefix, public, read-only or limited actions like placing a booking). `cart`, `city`, and `payment` each have a single controller and are all public.

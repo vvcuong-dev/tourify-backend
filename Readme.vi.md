@@ -62,34 +62,23 @@ Hệ thống đặt tour du lịch trực tuyến, cho phép khách hàng tìm k
 
 ```
 Client Request
-     │
-     ▼
-┌─────────────────────────────────────────────┐
-│  NestJS App                                  │
-│  ┌───────────┐  ┌────────────┐  ┌─────────┐ │
-│  │ Middleware │→ │ Controller │→ │ Pipe    │ │
-│  │ (Guard,    │  │ (Admin /   │  │ (Zod/   │ │
-│  │  JwtAuth)  │  │  *-Client) │  │  class- │ │
-│  │            │  │            │  │validator)│ │
-│  └───────────┘  └─────┬──────┘  └─────────┘ │
-│                       │                      │
-│                       ▼                      │
-│                 ┌──────────┐                 │
-│                 │  Service  │  (Business     │
-│                 └─────┬────┘   Logic)        │
-│                       │                      │
-│           ┌───────────┼────────────┐         │
-│           ▼           ▼            ▼         │
-│      ┌─────────┐ ┌─────────┐ ┌───────────┐   │
-│      │ Prisma  │ │  Redis  │ │Cloudinary/│   │
-│      │ Client  │ │ Service │ │  ZaloPay  │   │
-│      └────┬────┘ └────┬────┘ └───────────┘   │
-└───────────┼───────────┼───────────────────────┘
-            ▼           ▼
-       ┌─────────┐ ┌─────────┐
-       │ MySQL 9 │ │ Redis 8 │
-       │ (Docker)│ │ (Docker)│
-       └─────────┘ └─────────┘
+      │
+      ▼
+┌─────────────────────────────────────────────────────┐
+│                     NestJS App                      │
+│                                                     │
+│    Controller -> Service -> Repository (Prisma)     │
+│    (Admin / *-Client, JwtAuthGuard khi cần)         │
+│                                                     │
+│              Service còn gọi tới:                   │
+│    Redis (cache) - Cloudinary (upload) - ZaloPay    │
+└─────────────────────────────────────────────────────┘
+      │
+      ▼
+┌───────────────┐   ┌───────────────┐
+│   MySQL 9     │   │   Redis 8     │
+│   (Docker)    │   │   (Docker)    │
+└───────────────┘   └───────────────┘
 ```
 
 Các module nghiệp vụ chính (`tour`, `category`, `order`) có **hai controller/service riêng**: một dành cho **quản trị** (`@Controller('admin/...')` + `@UseGuards(JwtAuthGuard)`, đầy đủ CRUD) và một dành cho **client** (`*-client`, `@Controller('...')` không prefix `admin`, công khai, chỉ đọc hoặc thao tác giới hạn như đặt tour). Riêng `cart`, `city`, `payment` chỉ có 1 controller và đều là public.
