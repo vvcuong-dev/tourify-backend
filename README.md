@@ -1,4 +1,4 @@
-🧳 Tourify — Backend API
+**🧳 Tourify — Backend API**
 
 [🇻🇳 Tiếng Việt](https://github.com/vvcuong-dev/tourify-backend/blob/main/Readme.vi.md)
 
