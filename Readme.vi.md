@@ -1,4 +1,4 @@
-🧳 Tourify — Backend API
+**🧳 Tourify — Backend API**
 
 [🇬🇧 English](https://github.com/vvcuong-dev/tourify-backend/blob/main/README.md)
 
