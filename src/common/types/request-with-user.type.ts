@@ -1,6 +1,6 @@
 import { Request } from 'express';
-import { User } from '../../generated/prisma/browser';
+import { AuthUser } from './auth-user.type';
 
 export interface RequestWithUser extends Request {
-  user: Omit<User, 'password'>;
+  user: AuthUser;
 }

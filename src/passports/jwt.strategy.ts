@@ -10,7 +10,7 @@ import { UserStatus } from '../generated/prisma/browser';
 import { AppException } from '../common/exceptions/app.exception';
 import { TOURIFY_ERROR_CODES } from '../constants/error-code.constant';
 import { CACHE } from '../constants/cache.constant';
-import { UserResponse } from '../modules/user/responses/user.response';
+import { AuthUser } from '../common/types/auth-user.type';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -25,7 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload): Promise<UserResponse> {
+  async validate(payload: JwtPayload): Promise<AuthUser> {
     if (payload.jti) {
       const redisClient = this.redisService.getClient();
       const blacklisted = await redisClient.get(
@@ -48,6 +48,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         HttpStatus.UNAUTHORIZED,
       );
     }
-    return new UserResponse(user);
+    return {
+      id: user.id,
+      email: user.email,
+      status: user.status,
+      roleId: user.roleId,
+    };
   }
 }
