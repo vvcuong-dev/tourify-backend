@@ -1,6 +1,6 @@
 ## 🧳 Tourify — Backend API
 
-[🇻🇳 Tiếng Việt](https://github.com/vvcuong-dev/tourify-backend/blob/main/README.vi.md)
+[🇻🇳 Tiếng Việt](https://github.com/vvcuong-dev/tourify-backend/blob/main/Readme.vi.md)
 
 An online tour booking system that lets customers search and book tours **without needing an account**, while administrators manage all content (tours, categories, orders...) through a JWT-protected area. Built with Node.js 22, NestJS 11, TypeScript, Prisma 7, and MySQL, with ZaloPay payment integration.
 
