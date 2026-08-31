@@ -9,7 +9,14 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor() {
-    const adapter = new PrismaMariaDb(databaseConfig.url as string);
+    const dbUrl = new URL(databaseConfig.url as string);
+    const adapter = new PrismaMariaDb({
+      host: dbUrl.hostname,
+      port: dbUrl.port ? Number(dbUrl.port) : 3306,
+      user: decodeURIComponent(dbUrl.username),
+      password: decodeURIComponent(dbUrl.password),
+      database: dbUrl.pathname.replace(/^\//, ''),
+    });
     super({ adapter });
   }
 
