@@ -22,15 +22,19 @@ import { QueryOrderDto } from './dto/query-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { OrderDetailResponse } from './responses/order-detail.response';
 import { PaginatedResponse } from '../../common/responses/paginated.response';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
+import { PERMISSIONS } from '../../constants/permission.constant';
 
 @ApiTags('Orders')
 @ApiBearerAuth()
 @Controller('admin/orders')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get()
+  @RequirePermissions([PERMISSIONS.ORDER.LIST])
   @ApiOperation({ summary: 'List orders with filters' })
   @ApiResponse({
     status: 200,
@@ -42,6 +46,7 @@ export class OrderController {
   }
 
   @Get(':id')
+  @RequirePermissions([PERMISSIONS.ORDER.VIEW_DETAIL])
   @ApiOperation({ summary: 'Get order detail by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({
@@ -54,6 +59,7 @@ export class OrderController {
   }
 
   @Patch(':id')
+  @RequirePermissions([PERMISSIONS.ORDER.UPDATE_STATUS])
   @ApiOperation({ summary: 'Update order status' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateOrderStatusDto })

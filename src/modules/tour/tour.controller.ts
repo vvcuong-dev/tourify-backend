@@ -36,15 +36,19 @@ import { QueryTourDto } from './dto/query-tour.dto';
 import { ChangeMultiTourDto } from './dto/change-multi-tour.dto';
 import { TourResponse } from './responses/tour-response';
 import { PaginatedResponse } from '../../common/responses/paginated.response';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
+import { PERMISSIONS } from '../../constants/permission.constant';
 
 @ApiTags('Tours')
 @ApiBearerAuth()
 @Controller('admin/tours')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class TourController {
   constructor(private readonly tourService: TourService) {}
 
   @Get()
+  @RequirePermissions([PERMISSIONS.TOUR.LIST])
   @ApiOperation({ summary: 'List tours with filters' })
   @ApiResponse({
     status: 200,
@@ -56,6 +60,7 @@ export class TourController {
   }
 
   @Get(':id')
+  @RequirePermissions([PERMISSIONS.TOUR.LIST])
   @ApiOperation({ summary: 'Get tour detail by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({
@@ -68,6 +73,7 @@ export class TourController {
   }
 
   @Post()
+  @RequirePermissions([PERMISSIONS.TOUR.CREATE])
   @ApiOperation({ summary: 'Create a tour' })
   @ApiBody({ type: CreateTourDto })
   @ApiResponse({
@@ -81,6 +87,7 @@ export class TourController {
   }
 
   @Patch('change-multi')
+  @RequirePermissions([PERMISSIONS.TOUR.UPDATE])
   @ApiOperation({ summary: 'Bulk update tours' })
   @ApiBody({ type: ChangeMultiTourDto })
   @ApiResponse({
@@ -96,6 +103,7 @@ export class TourController {
   }
 
   @Patch(':id')
+  @RequirePermissions([PERMISSIONS.TOUR.UPDATE])
   @ApiOperation({ summary: 'Update a tour' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateTourDto })
@@ -113,6 +121,7 @@ export class TourController {
   }
 
   @Delete(':id')
+  @RequirePermissions([PERMISSIONS.TOUR.DELETE])
   @ApiOperation({ summary: 'Soft delete a tour' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({
@@ -128,6 +137,7 @@ export class TourController {
   }
 
   @Post(':id/avatar')
+  @RequirePermissions([PERMISSIONS.TOUR.UPDATE_IMAGE])
   @ApiOperation({ summary: 'Upload tour avatar' })
   @ApiParam({ name: 'id', type: Number })
   @ApiConsumes('multipart/form-data')
@@ -156,6 +166,7 @@ export class TourController {
   }
 
   @Post(':id/images')
+  @RequirePermissions([PERMISSIONS.TOUR.UPDATE_IMAGE])
   @ApiOperation({ summary: 'Upload tour images' })
   @ApiParam({ name: 'id', type: Number })
   @ApiConsumes('multipart/form-data')
@@ -190,6 +201,7 @@ export class TourController {
   }
 
   @Delete(':id/images/:imageId')
+  @RequirePermissions([PERMISSIONS.TOUR.UPDATE_IMAGE])
   @ApiOperation({ summary: 'Delete a tour image' })
   @ApiParam({ name: 'id', type: Number })
   @ApiParam({ name: 'imageId', type: Number })

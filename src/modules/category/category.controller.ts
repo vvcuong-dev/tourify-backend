@@ -34,15 +34,19 @@ import { ChangeMultiCategoryDto } from './dto/change-multi-category.dto';
 import { QueryCategoryDto } from './dto/query-category.dto';
 import { CategoryResponse } from './responses/category.response';
 import { PaginatedResponse } from '../../common/responses/paginated.response';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
+import { PERMISSIONS } from '../../constants/permission.constant';
 
 @ApiTags('Categories')
 @ApiBearerAuth()
 @Controller('admin/categories')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Get()
+  @RequirePermissions([PERMISSIONS.CATEGORY.LIST])
   @ApiOperation({ summary: 'List categories with filters' })
   @ApiResponse({
     status: 200,
@@ -54,6 +58,7 @@ export class CategoryController {
   }
 
   @Get('tree')
+  @RequirePermissions([PERMISSIONS.CATEGORY.LIST])
   @ApiOperation({ summary: 'Get category tree' })
   @ApiResponse({
     status: 200,
@@ -66,6 +71,7 @@ export class CategoryController {
   }
 
   @Get(':id')
+  @RequirePermissions([PERMISSIONS.CATEGORY.LIST])
   @ApiOperation({ summary: 'Get category detail by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({
@@ -79,6 +85,7 @@ export class CategoryController {
   }
 
   @Post()
+  @RequirePermissions([PERMISSIONS.CATEGORY.CREATE])
   @ApiOperation({ summary: 'Create a category' })
   @ApiBody({ type: CreateCategoryDto })
   @ApiResponse({
@@ -92,6 +99,7 @@ export class CategoryController {
   }
 
   @Post(':id/image')
+  @RequirePermissions([PERMISSIONS.CATEGORY.UPDATE])
   @ApiOperation({ summary: 'Upload category image' })
   @ApiParam({ name: 'id', type: Number })
   @ApiConsumes('multipart/form-data')
@@ -125,6 +133,7 @@ export class CategoryController {
   }
 
   @Patch('change-multi')
+  @RequirePermissions([PERMISSIONS.CATEGORY.UPDATE])
   @ApiOperation({ summary: 'Bulk update categories' })
   @ApiBody({ type: ChangeMultiCategoryDto })
   @ApiResponse({
@@ -141,6 +150,7 @@ export class CategoryController {
   }
 
   @Patch(':id')
+  @RequirePermissions([PERMISSIONS.CATEGORY.UPDATE])
   @ApiOperation({ summary: 'Update a category' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateCategoryDto })
@@ -160,6 +170,7 @@ export class CategoryController {
   }
 
   @Delete(':id')
+  @RequirePermissions([PERMISSIONS.CATEGORY.DELETE])
   @ApiOperation({ summary: 'Soft delete a category' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({

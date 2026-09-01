@@ -34,11 +34,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { PaginatedResponse } from '../../common/responses/paginated.response';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { PERMISSIONS } from '../../constants/permission.constant';
+import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
 
 @ApiTags('Users')
 @ApiBearerAuth()
 @Controller('admin/users')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -95,6 +98,7 @@ export class UserController {
   }
 
   @Get()
+  @RequirePermissions([PERMISSIONS.USER.LIST])
   @ApiOperation({ summary: 'List users with filters' })
   @ApiResponse({
     status: 200,
@@ -106,6 +110,7 @@ export class UserController {
   }
 
   @Get(':id')
+  @RequirePermissions([PERMISSIONS.USER.LIST])
   @ApiOperation({ summary: 'Get user detail by id' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({
@@ -118,6 +123,7 @@ export class UserController {
   }
 
   @Post()
+  @RequirePermissions([PERMISSIONS.USER.CREATE])
   @ApiOperation({ summary: 'Create a user' })
   @ApiBody({ type: CreateUserDto })
   @ApiResponse({
@@ -130,6 +136,7 @@ export class UserController {
   }
 
   @Patch(':id')
+  @RequirePermissions([PERMISSIONS.USER.UPDATE])
   @ApiOperation({ summary: 'Update a user' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: AdminUpdateUserDto })
@@ -146,6 +153,7 @@ export class UserController {
   }
 
   @Delete(':id')
+  @RequirePermissions([PERMISSIONS.USER.DELETE])
   @ApiOperation({ summary: 'Soft delete a user' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({
