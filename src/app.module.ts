@@ -17,12 +17,21 @@ import { OrderModule } from './modules/order/order.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { PermissionModule } from './modules/permission/permission.module';
 import { RoleModule } from './modules/role/role.module';
+import { MailModule } from './modules/mail/mail.module';
+import { redisConfig } from './configs/redis.config';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnv,
+    }),
+    BullModule.forRoot({
+      connection: {
+        host: redisConfig.host,
+        port: redisConfig.port,
+      },
     }),
     PrismaModule,
     AuthModule,
@@ -38,6 +47,7 @@ import { RoleModule } from './modules/role/role.module';
     PaymentModule,
     PermissionModule,
     RoleModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

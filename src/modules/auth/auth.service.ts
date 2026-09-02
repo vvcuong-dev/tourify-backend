@@ -19,6 +19,11 @@ import { TokenPairResponse } from './response/token-pair.response';
 import { RefreshTokenResponse } from './response/refresh-token.response';
 import { CacheService } from '../redis/cache.service';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import * as crypto from 'crypto';
+import { MailService } from '../mail/mail.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { mailConfig } from '../../configs/mail.config';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +33,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly redisService: RedisService,
     private readonly cacheService: CacheService,
+    private readonly mailService: MailService,
   ) {}
 
   private get redis() {
@@ -233,6 +239,68 @@ export class AuthService {
 
     return true;
   }
+  async forgotPassword(dto: ForgotPasswordDto): Promise<boolean> {
+    const user = await this.userService.findByEmail(dto.email);
+
+    if (!user) {
+      return true;
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    await this.redis.set(
+      CACHE.AUTH._KEY.RESET_PASSWORD(resetToken),
+      String(user.id),
+      { EX: TTL.MEDIUM }, // 15 phút
+    );
+
+    const resetLink = `${mailConfig.clientResetPasswordUrl}?token=${resetToken}`;
+
+    await this.mailService.queueForgotPasswordEmail({
+      toEmail: user.email,
+      userName: user.name,
+      resetLink,
+    });
+
+    return true;
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<boolean> {
+    const key = CACHE.AUTH._KEY.RESET_PASSWORD(dto.token);
+    const userId = await this.redis.get(key);
+
+    if (!userId) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.AUTH.INVALID_RESET_TOKEN,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const user = await this.userService.findById(Number(userId));
+    if (!user) {
+      throw new AppException(
+        TOURIFY_ERROR_CODES.USER.USER_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const hashedNewPassword = await hashPassword(dto.newPassword);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedNewPassword },
+    });
+
+    await this.cacheService.delete(key);
+
+    // Đăng xuất tất cả session cũ cho an toàn
+    await this.cacheService.deleteByPattern(
+      CACHE.AUTH._PATTERN.ALL_REFRESH_TOKENS(user.id),
+    );
+
+    return true;
+  }
+
   async logout(userId: number, accessToken: string): Promise<boolean> {
     const decoded = this.tokenService.decode(accessToken);
     if (!decoded.jti || !decoded.exp) {

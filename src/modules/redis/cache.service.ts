@@ -32,11 +32,17 @@ export class CacheService {
     await this.redis.del(key);
   }
 
+  // async deleteByPattern(pattern: string): Promise<void> {
+  //   const keys = this.redis.scanIterator({ TYPE: 'string', MATCH: pattern });
+  //   for await (const key of keys) {
+  //     await this.redis.del(key);
+  //   }
+  // }
+
   async deleteByPattern(pattern: string): Promise<void> {
-    const keys = this.redis.scanIterator({ TYPE: 'string', MATCH: pattern });
-    for await (const key of keys) {
-      await this.redis.del(key);
-    }
+    const keys = await this.redis.keys(pattern);
+    if (keys.length === 0) return;
+    await this.redis.del(keys);
   }
 
   async tagVersion(tagName: string) {
