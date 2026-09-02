@@ -11,12 +11,12 @@ import { TOURIFY_ERROR_CODES } from '../../../constants/error-code.constant';
 const { USER } = TOURIFY_ERROR_CODES;
 
 export class LoginDto {
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty({ example: 'cuongvudev2911@gmail.com' })
   @IsEmail({}, { message: USER.EMAIL_INVALID })
   @IsNotEmpty({ message: USER.EMAIL_REQUIRED })
   email!: string;
 
-  @ApiProperty({ example: 'Abcd@1234', maxLength: 72 })
+  @ApiProperty({ example: 'LeVanA@123456', maxLength: 72 })
   @MaxLength(72, { message: USER.PASSWORD_TOO_LONG })
   @IsStrongPassword(
     {
