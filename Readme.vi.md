@@ -33,9 +33,10 @@ Hệ thống đặt tour du lịch trực tuyến, cho phép khách hàng tìm k
 
 ### Quản trị viên (yêu cầu đăng nhập)
 
-- **Xác thực** — đăng ký, đăng nhập, refresh token, đăng xuất, đổi mật khẩu, đổi email
+- **Xác thực** — đăng ký, đăng nhập, refresh token, đăng xuất, đổi mật khẩu, đổi email, quên/đặt lại mật khẩu (gửi email bất đồng bộ qua hàng đợi BullMQ)
 - **Hồ sơ cá nhân** — xem/cập nhật profile, đổi avatar (Cloudinary)
 - **Quản lý tài khoản quản trị** — CRUD, cập nhật trạng thái (ACTIVE/PENDING/INACTIVE/BANNED)
+- **Quản lý Role & Permission (RBAC)** — CRUD role, gán/thay thế permission cho từng role, xem danh sách toàn bộ permission để dựng UI gán quyền
 - **Quản lý danh mục** — dạng cây (parent/children), upload ảnh, sắp xếp vị trí, bật/tắt hàng loạt, xoá mềm
 - **Quản lý tour** — CRUD, upload avatar + nhiều ảnh, quản lý lịch trình, giá & tồn kho theo từng loại khách, bật/tắt hàng loạt, xoá mềm
 - **Quản lý đơn hàng** — xem danh sách, chi tiết, cập nhật trạng thái đơn (INITIAL → DONE / CANCEL)
@@ -50,6 +51,8 @@ Hệ thống đặt tour du lịch trực tuyến, cho phép khách hàng tìm k
 | Cơ sở dữ liệu   | MySQL 9 (qua Docker)                                             |
 | ORM             | Prisma 7 (`@prisma/adapter-mariadb`)                             |
 | Cache / Session | Redis 8                                                          |
+| Job Queue       | BullMQ (`@nestjs/bullmq`) + Redis                                |
+| Email           | Nodemailer (Gmail SMTP)                                          |
 | Xác thực        | JWT (`@nestjs/jwt`, `passport-jwt`) + bcrypt                     |
 | Validation      | class-validator, class-transformer                               |
 | Upload ảnh      | Cloudinary                                                       |
@@ -179,25 +182,29 @@ DOMAIN_WEBSITE="https://<your-ngrok-domain>.ngrok-free.app"
 
 ## 🗃️ Cơ Sở Dữ Liệu
 
-### Bảng (8 bảng)
+### Bảng (11 bảng)
 
-| Bảng             | Mô tả                                                              |
-| ---------------- | ------------------------------------------------------------------ |
-| `users`          | Tài khoản quản trị viên (khách hàng không có tài khoản)            |
-| `categories`     | Danh mục tour, dạng cây (tự tham chiếu parent/children)            |
-| `cities`         | Thành phố / địa điểm                                               |
-| `tours`          | Thông tin tour: giá, tồn kho, lịch trình, trạng thái               |
-| `tour_images`    | Ảnh của tour (nhiều ảnh/tour, lưu trên Cloudinary)                 |
-| `tour_locations` | Quan hệ nhiều-nhiều giữa `tours` và `cities`                       |
-| `orders`         | Đơn đặt tour (guest checkout — lưu trực tiếp thông tin khách)      |
-| `order_items`    | Chi tiết từng tour trong đơn hàng (snapshot giá tại thời điểm đặt) |
+| Bảng               | Mô tả                                                                                                  |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| `users`            | Tài khoản quản trị viên (khách hàng không có tài khoản)                                                |
+| `roles`            | Role cho RBAC (VD: Super Admin, Editor); role `isSystem` không thể xoá/sửa                             |
+| `permissions`      | Từng permission riêng lẻ, phân nhóm theo `group` (`USER`, `TOUR`, `CATEGORY`, `CITY`, `ORDER`, `ROLE`) |
+| `role_permissions` | Bảng nối nhiều-nhiều giữa `roles` và `permissions`                                                     |
+| `categories`       | Danh mục tour, dạng cây (tự tham chiếu parent/children)                                                |
+| `cities`           | Thành phố / địa điểm                                                                                   |
+| `tours`            | Thông tin tour: giá, tồn kho, lịch trình, trạng thái                                                   |
+| `tour_images`      | Ảnh của tour (nhiều ảnh/tour, lưu trên Cloudinary)                                                     |
+| `tour_locations`   | Quan hệ nhiều-nhiều giữa `tours` và `cities`                                                           |
+| `orders`           | Đơn đặt tour (guest checkout — lưu trực tiếp thông tin khách)                                          |
+| `order_items`      | Chi tiết từng tour trong đơn hàng (snapshot giá tại thời điểm đặt)                                     |
 
 ### Quan hệ chính
 
 - `Category` tự tham chiếu (`parent` / `children`) để tạo cây danh mục
 - `Tour` thuộc 1 `Category`, có nhiều `TourImage`, và liên kết nhiều `City` qua `TourLocation`
 - `Order` có nhiều `OrderItem`; mỗi `OrderItem` **lưu snapshot** giá & số lượng theo loại khách (adult/children/baby) tại thời điểm đặt — không phụ thuộc giá `Tour` thay đổi sau này
-- Soft delete (`deleted`, `deletedBy`) áp dụng cho `Category`, `Tour`, `User`
+- `Role` và `Permission` quan hệ nhiều-nhiều qua `RolePermission` (composite key `[roleId, permissionId]`, cascade delete); mỗi `User` thuộc 1 `Role`
+- Soft delete (`deleted`, `deletedBy`) áp dụng cho `Category`, `Tour`, `User`, `Role`
 
 ### Enums
 
@@ -218,20 +225,22 @@ pnpm prisma migrate dev --name <ten_migration>
 
 ## 📡 API Endpoints
 
-Tổng cộng **31 endpoints**, chia làm khu vực **Admin** (`/admin/...`, yêu cầu JWT) và **Public** (không có prefix `/admin`, phục vụ khách vãng lai).
+Tổng cộng **40 endpoints**, chia làm khu vực **Admin** (`/admin/...`, yêu cầu JWT) và **Public** (không có prefix `/admin`, phục vụ khách vãng lai).
 
 > **Base URL:** `http://localhost:3000/api` — các path bên dưới đều là path tương đối so với base này (vd `/admin/auth/login` → `http://localhost:3000/api/admin/auth/login`).
 
-### Auth (`/admin/auth`) — 6 endpoints
+### Auth (`/admin/auth`) — 8 endpoints
 
-| Method | Endpoint                      | Quyền  | Mô tả                      |
-| ------ | ----------------------------- | ------ | -------------------------- |
-| POST   | `/admin/auth/register`        | Public | Đăng ký tài khoản quản trị |
-| POST   | `/admin/auth/login`           | Public | Đăng nhập, trả về cặp JWT  |
-| POST   | `/admin/auth/refresh-token`   | Public | Làm mới access token       |
-| POST   | `/admin/auth/logout`          | Auth   | Đăng xuất                  |
-| PATCH  | `/admin/auth/change-password` | Auth   | Đổi mật khẩu               |
-| PATCH  | `/admin/auth/change-email`    | Auth   | Đổi email                  |
+| Method | Endpoint                      | Quyền  | Mô tả                                                            |
+| ------ | ----------------------------- | ------ | ---------------------------------------------------------------- |
+| POST   | `/admin/auth/register`        | Public | Đăng ký tài khoản quản trị                                       |
+| POST   | `/admin/auth/login`           | Public | Đăng nhập, trả về cặp JWT                                        |
+| POST   | `/admin/auth/forgot-password` | Public | Đưa yêu cầu gửi email reset mật khẩu vào hàng đợi (luôn trả 200) |
+| POST   | `/admin/auth/reset-password`  | Public | Đặt lại mật khẩu bằng token nhận từ email                        |
+| POST   | `/admin/auth/refresh-token`   | Public | Làm mới access token                                             |
+| POST   | `/admin/auth/logout`          | Auth   | Đăng xuất                                                        |
+| PATCH  | `/admin/auth/change-password` | Auth   | Đổi mật khẩu                                                     |
+| PATCH  | `/admin/auth/change-email`    | Auth   | Đổi email                                                        |
 
 ### Users (`/admin/users`) — Auth — 8 endpoints
 
@@ -245,6 +254,23 @@ Tổng cộng **31 endpoints**, chia làm khu vực **Admin** (`/admin/...`, yê
 | POST   | `/admin/users`         | Tạo người dùng mới                            |
 | PATCH  | `/admin/users/:id`     | Cập nhật người dùng                           |
 | DELETE | `/admin/users/:id`     | Xoá mềm người dùng                            |
+
+### Roles (`/admin/roles`) — Auth — 6 endpoints
+
+| Method | Endpoint                       | Mô tả                                  |
+| ------ | ------------------------------ | -------------------------------------- |
+| GET    | `/admin/roles`                 | Danh sách role (phân trang, tìm kiếm)  |
+| GET    | `/admin/roles/:id`             | Chi tiết role kèm danh sách permission |
+| POST   | `/admin/roles`                 | Tạo role                               |
+| PATCH  | `/admin/roles/:id`             | Cập nhật thông tin role                |
+| DELETE | `/admin/roles/:id`             | Xoá mềm role                           |
+| POST   | `/admin/roles/:id/permissions` | Gán (thay thế) permission cho role     |
+
+### Permissions (`/admin/permissions`) — Auth — 1 endpoint
+
+| Method | Endpoint             | Mô tả                                               |
+| ------ | -------------------- | --------------------------------------------------- |
+| GET    | `/admin/permissions` | Danh sách toàn bộ permission (để dựng UI gán quyền) |
 
 ### Categories
 
@@ -341,7 +367,8 @@ Tổng cộng **31 endpoints**, chia làm khu vực **Admin** (`/admin/...`, yê
 - **Access Token:** sống ngắn (15 phút), gửi qua header `Authorization: Bearer <token>`
 - **Refresh Token:** sống dài (7 ngày)
 - **JwtAuthGuard** (`common/guards/jwt-auth.guard.ts`) áp dụng theo từng controller (`@UseGuards(JwtAuthGuard)`) cho toàn bộ route dưới `/admin/...`; các controller `*-client` (`categories`, `tours`, `orders`, `cart`, `payment`, `cities`) không gắn guard này vì phục vụ khách vãng lai
-- Không có hệ thống role đa cấp (OWNER/CASHIER/...) như một số hệ thống khác — `User` hiện chỉ đại diện cho **tài khoản quản trị**, phân biệt qua `status` chứ chưa có field `role` riêng
+- **RBAC động** — mỗi `User` thuộc 1 `Role`, mỗi `Role` có tập `Permission` quan hệ nhiều-nhiều (qua `RolePermission`). Các route cần bảo vệ được đánh dấu bằng `@RequirePermissions([...])` và kiểm tra bởi `PermissionsGuard` (load permission của role rồi đối chiếu theo logic AND/OR). Role và permission được quản lý qua `/admin/roles` và `/admin/permissions`; role đánh dấu `isSystem` thì không thể sửa/xoá
+- **Role seed sẵn** (`prisma/seed.ts`) — `ADMIN` (toàn quyền, `isSystem`), `TOUR_MANAGER` (quyền tour/category/city), `ORDER_STAFF` (xem/xử lý đơn hàng), `USER_MANAGER` (CRUD user)
 
 ## 🎯 Các Quyết Định Thiết Kế
 
@@ -355,6 +382,8 @@ Tổng cộng **31 endpoints**, chia làm khu vực **Admin** (`/admin/...`, yê
 | Category dạng cây tự tham chiếu                             | Hỗ trợ danh mục cha/con linh hoạt                                                                       |
 | Soft delete (`deleted` flag)                                | Giữ lại dữ liệu lịch sử, không xoá cứng khỏi DB                                                         |
 | ZaloPay cần domain public (ngrok khi dev)                   | Callback thanh toán yêu cầu server có thể truy cập từ internet                                          |
+| RBAC động (Role ↔ Permission qua bảng nối)                  | Cho phép admin định nghĩa role/permission tuỳ ý lúc runtime thay vì hardcode enum role cố định          |
+| Email reset mật khẩu gửi qua hàng đợi BullMQ                | Giữ request HTTP nhanh; tự động retry (3 lần, exponential backoff) nếu Gmail SMTP lỗi                   |
 
 ## 📁 Cấu Trúc Dự Án
 
@@ -368,8 +397,11 @@ tourify-backend/
 │   ├── constants/               # Hằng số (cache key, error code, upload...)
 │   ├── generated/prisma/        # Prisma Client được generate
 │   ├── modules/
-│   │   ├── auth/                # Đăng nhập, đăng ký, refresh token
+│   │   ├── auth/                # Đăng nhập, đăng ký, refresh token, quên/đặt lại mật khẩu
 │   │   ├── user/                # Quản lý tài khoản quản trị
+│   │   ├── role/                # CRUD role + gán permission
+│   │   ├── permission/          # Danh sách permission
+│   │   ├── mail/                # Hàng đợi mail BullMQ (service + processor, VD: email quên mật khẩu)
 │   │   ├── category/            # Danh mục (admin + client)
 │   │   ├── city/                # Thành phố/địa điểm (public, chỉ đọc)
 │   │   ├── tour/                # Tour (admin + client)
@@ -394,16 +426,17 @@ tourify-backend/
 
 ## 📜 Lệnh Scripts
 
-| Lệnh                      | Mô tả                               |
-| ------------------------- | ----------------------------------- |
-| `pnpm start:dev`          | Khởi chạy dev server với hot reload |
-| `pnpm build`              | Build ra thư mục `dist/`            |
-| `pnpm start:prod`         | Chạy bản production đã build        |
-| `pnpm lint`               | Kiểm tra & tự sửa lỗi ESLint        |
-| `pnpm format`             | Format code với Prettier            |
-| `pnpm prisma migrate dev` | Chạy migration                      |
-| `pnpm prisma generate`    | Generate lại Prisma Client          |
-| `pnpm prisma studio`      | Mở giao diện xem/sửa dữ liệu        |
+| Lệnh                               | Mô tả                                                  |
+| ---------------------------------- | ------------------------------------------------------ |
+| `pnpm start:dev`                   | Khởi chạy dev server với hot reload                    |
+| `pnpm build`                       | Build ra thư mục `dist/`                               |
+| `pnpm start:prod`                  | Chạy bản production đã build                           |
+| `pnpm lint`                        | Kiểm tra & tự sửa lỗi ESLint                           |
+| `pnpm format`                      | Format code với Prettier                               |
+| `pnpm prisma migrate dev`          | Chạy migration                                         |
+| `pnpm prisma generate`             | Generate lại Prisma Client                             |
+| `pnpm prisma studio`               | Mở giao diện xem/sửa dữ liệu                           |
+| `pnpm exec tsx src/prisma/seed.ts` | Seed permission, role mặc định và danh sách tỉnh/thành |
 
 > `pnpm test` hiện chưa cấu hình đầy đủ do các file `*.spec.ts` đã được gỡ bỏ tạm thời — sẽ bổ sung khi viết unit test.
 

@@ -33,9 +33,10 @@ An online tour booking system that lets customers search and book tours **withou
 
 ### Administrators (login required)
 
-- **Auth** — register, login, refresh token, logout, change password, change email
+- **Auth** — register, login, refresh token, logout, change password, change email, forgot/reset password (email sent asynchronously via a BullMQ queue)
 - **Profile** — view/update own profile, change avatar (Cloudinary)
 - **Admin account management** — CRUD, status updates (ACTIVE/PENDING/INACTIVE/BANNED)
+- **Role & Permission management (RBAC)** — CRUD roles, assign/replace permissions per role, list all permissions for building a role-assignment UI
 - **Category management** — tree structure (parent/children), image upload, position ordering, bulk enable/disable, soft delete
 - **Tour management** — CRUD, avatar + multiple image uploads, schedule management, pricing & stock per passenger type, bulk enable/disable, soft delete
 - **Order management** — list, view details, update order status (INITIAL → DONE / CANCEL)
@@ -50,6 +51,8 @@ An online tour booking system that lets customers search and book tours **withou
 | Database        | MySQL 9 (via Docker)                                                  |
 | ORM             | Prisma 7 (`@prisma/adapter-mariadb`)                                  |
 | Cache / Session | Redis 8                                                               |
+| Job Queue       | BullMQ (`@nestjs/bullmq`) + Redis                                     |
+| Email           | Nodemailer (Gmail SMTP)                                               |
 | Auth            | JWT (`@nestjs/jwt`, `passport-jwt`) + bcrypt                          |
 | Validation      | class-validator, class-transformer                                    |
 | Image upload    | Cloudinary                                                            |
@@ -179,25 +182,29 @@ DOMAIN_WEBSITE="https://<your-ngrok-domain>.ngrok-free.app"
 
 ## 🗃️ Database
 
-### Tables (8 total)
+### Tables (11 total)
 
-| Table            | Description                                                        |
-| ---------------- | ------------------------------------------------------------------ |
-| `users`          | Admin accounts (customers don't have accounts)                     |
-| `categories`     | Tour categories, tree structure (self-referencing parent/children) |
-| `cities`         | Cities / locations                                                 |
-| `tours`          | Tour info: pricing, stock, schedule, status                        |
-| `tour_images`    | Tour images (multiple per tour, stored on Cloudinary)              |
-| `tour_locations` | Many-to-many relation between `tours` and `cities`                 |
-| `orders`         | Tour bookings (guest checkout — customer info stored directly)     |
-| `order_items`    | Line items per booking (price snapshot at booking time)            |
+| Table              | Description                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| `users`            | Admin accounts (customers don't have accounts)                                                   |
+| `roles`            | Admin roles for RBAC (e.g. Super Admin, Editor); `isSystem` roles can't be deleted/edited        |
+| `permissions`      | Individual permissions, grouped by `group` (`USER`, `TOUR`, `CATEGORY`, `CITY`, `ORDER`, `ROLE`) |
+| `role_permissions` | Many-to-many join table between `roles` and `permissions`                                        |
+| `categories`       | Tour categories, tree structure (self-referencing parent/children)                               |
+| `cities`           | Cities / locations                                                                               |
+| `tours`            | Tour info: pricing, stock, schedule, status                                                      |
+| `tour_images`      | Tour images (multiple per tour, stored on Cloudinary)                                            |
+| `tour_locations`   | Many-to-many relation between `tours` and `cities`                                               |
+| `orders`           | Tour bookings (guest checkout — customer info stored directly)                                   |
+| `order_items`      | Line items per booking (price snapshot at booking time)                                          |
 
 ### Key relationships
 
 - `Category` is self-referencing (`parent` / `children`) to form a category tree
 - `Tour` belongs to one `Category`, has many `TourImage`, and links to many `City` via `TourLocation`
 - `Order` has many `OrderItem`; each `OrderItem` **stores a snapshot** of price and quantity per passenger type (adult/children/baby) at booking time — independent of later `Tour` price changes
-- Soft delete (`deleted`, `deletedBy`) applies to `Category`, `Tour`, `User`
+- `Role` and `Permission` are many-to-many via `RolePermission` (composite key `[roleId, permissionId]`, cascade delete); `User` belongs to one `Role`
+- Soft delete (`deleted`, `deletedBy`) applies to `Category`, `Tour`, `User`, `Role`
 
 ### Enums
 
@@ -218,20 +225,22 @@ pnpm prisma migrate dev --name <migration_name>
 
 ## 📡 API Endpoints
 
-**31 endpoints** in total, split between the **Admin** area (`/admin/...`, JWT required) and **Public** area (no `/admin` prefix, serves anonymous visitors).
+**40 endpoints** in total, split between the **Admin** area (`/admin/...`, JWT required) and **Public** area (no `/admin` prefix, serves anonymous visitors).
 
 > **Base URL:** `http://localhost:3000/api` — all paths below are relative to this base (e.g. `/admin/auth/login` → `http://localhost:3000/api/admin/auth/login`).
 
-### Auth (`/admin/auth`) — 6 endpoints
+### Auth (`/admin/auth`) — 8 endpoints
 
-| Method | Endpoint                      | Access | Description                |
-| ------ | ----------------------------- | ------ | -------------------------- |
-| POST   | `/admin/auth/register`        | Public | Register an admin account  |
-| POST   | `/admin/auth/login`           | Public | Log in, returns a JWT pair |
-| POST   | `/admin/auth/refresh-token`   | Public | Refresh the access token   |
-| POST   | `/admin/auth/logout`          | Auth   | Log out                    |
-| PATCH  | `/admin/auth/change-password` | Auth   | Change password            |
-| PATCH  | `/admin/auth/change-email`    | Auth   | Change email               |
+| Method | Endpoint                      | Access | Description                                                       |
+| ------ | ----------------------------- | ------ | ----------------------------------------------------------------- |
+| POST   | `/admin/auth/register`        | Public | Register an admin account                                         |
+| POST   | `/admin/auth/login`           | Public | Log in, returns a JWT pair                                        |
+| POST   | `/admin/auth/forgot-password` | Public | Queue a password-reset email (always returns 200, no enumeration) |
+| POST   | `/admin/auth/reset-password`  | Public | Reset password using the token from the email                     |
+| POST   | `/admin/auth/refresh-token`   | Public | Refresh the access token                                          |
+| POST   | `/admin/auth/logout`          | Auth   | Log out                                                           |
+| PATCH  | `/admin/auth/change-password` | Auth   | Change password                                                   |
+| PATCH  | `/admin/auth/change-email`    | Auth   | Change email                                                      |
 
 ### Users (`/admin/users`) — Auth — 8 endpoints
 
@@ -245,6 +254,23 @@ pnpm prisma migrate dev --name <migration_name>
 | POST   | `/admin/users`         | Create a new user                     |
 | PATCH  | `/admin/users/:id`     | Update a user                         |
 | DELETE | `/admin/users/:id`     | Soft-delete a user                    |
+
+### Roles (`/admin/roles`) — Auth — 6 endpoints
+
+| Method | Endpoint                       | Description                             |
+| ------ | ------------------------------ | --------------------------------------- |
+| GET    | `/admin/roles`                 | List roles (paginated, searchable)      |
+| GET    | `/admin/roles/:id`             | Get role detail with its permissions    |
+| POST   | `/admin/roles`                 | Create a role                           |
+| PATCH  | `/admin/roles/:id`             | Update role info                        |
+| DELETE | `/admin/roles/:id`             | Soft-delete a role                      |
+| POST   | `/admin/roles/:id/permissions` | Assign (replace) permissions for a role |
+
+### Permissions (`/admin/permissions`) — Auth — 1 endpoint
+
+| Method | Endpoint             | Description                                   |
+| ------ | -------------------- | --------------------------------------------- |
+| GET    | `/admin/permissions` | List all permissions (for role-assignment UI) |
 
 ### Categories
 
@@ -341,7 +367,8 @@ Admin login → Access Token (15 min) + Refresh Token (7 days)
 - **Access Token:** short-lived (15 min), sent via the `Authorization: Bearer <token>` header
 - **Refresh Token:** long-lived (7 days)
 - **JwtAuthGuard** (`common/guards/jwt-auth.guard.ts`) is applied per controller (`@UseGuards(JwtAuthGuard)`) to all routes under `/admin/...`; the `*-client` controllers (`categories`, `tours`, `orders`, `cart`, `payment`, `cities`) don't use this guard since they serve anonymous visitors
-- There's no multi-tier role system (OWNER/CASHIER/...) like in some other systems — `User` currently only represents **admin accounts**, distinguished by `status` rather than a dedicated `role` field
+- **Dynamic RBAC** — each `User` belongs to one `Role`, and each `Role` has a many-to-many set of `Permission`s (via `RolePermission`). Protected routes are decorated with `@RequirePermissions([...])` and checked by `PermissionsGuard`, which loads the user's role permissions and verifies them with AND/OR logic. Roles and permissions themselves are managed via `/admin/roles` and `/admin/permissions`; a role marked `isSystem` can't be edited or deleted
+- **Seeded roles** (`prisma/seed.ts`) — `ADMIN` (all permissions, `isSystem`), `TOUR_MANAGER` (tour/category/city permissions), `ORDER_STAFF` (order list/view/update-status), `USER_MANAGER` (user CRUD)
 
 ## 🎯 Key Design Decisions
 
@@ -355,6 +382,8 @@ Admin login → Access Token (15 min) + Refresh Token (7 days)
 | Self-referencing category tree                          | Supports flexible parent/child categories                                                          |
 | Soft delete (`deleted` flag)                            | Preserves historical data instead of hard-deleting from the DB                                     |
 | ZaloPay requires a public domain (ngrok in dev)         | Payment callbacks require a server reachable from the internet                                     |
+| Dynamic RBAC (Role ↔ Permission via join table)         | Lets admins define custom roles/permissions at runtime instead of hardcoding a fixed role enum     |
+| Password-reset emails sent via a BullMQ queue           | Keeps the HTTP request fast; retries automatically (3x, exponential backoff) if Gmail SMTP fails   |
 
 ## 📁 Project Structure
 
@@ -368,8 +397,11 @@ tourify-backend/
 │   ├── constants/               # Constants (cache keys, error codes, upload...)
 │   ├── generated/prisma/        # Generated Prisma Client
 │   ├── modules/
-│   │   ├── auth/                # Login, register, refresh token
+│   │   ├── auth/                # Login, register, refresh token, forgot/reset password
 │   │   ├── user/                # Admin account management
+│   │   ├── role/                # Role CRUD + permission assignment
+│   │   ├── permission/          # Permission listing
+│   │   ├── mail/                # BullMQ mail queue (service + processor, e.g. forgot-password email)
 │   │   ├── category/            # Categories (admin + client)
 │   │   ├── city/                # Cities/locations (public, read-only)
 │   │   ├── tour/                # Tours (admin + client)
@@ -394,16 +426,17 @@ tourify-backend/
 
 ## 📜 Scripts
 
-| Command                   | Description                          |
-| ------------------------- | ------------------------------------ |
-| `pnpm start:dev`          | Start the dev server with hot reload |
-| `pnpm build`              | Build to `dist/`                     |
-| `pnpm start:prod`         | Run the built production bundle      |
-| `pnpm lint`               | Check & auto-fix ESLint issues       |
-| `pnpm format`             | Format code with Prettier            |
-| `pnpm prisma migrate dev` | Run migrations                       |
-| `pnpm prisma generate`    | Regenerate the Prisma Client         |
-| `pnpm prisma studio`      | Open the data browser/editor UI      |
+| Command                            | Description                                 |
+| ---------------------------------- | ------------------------------------------- |
+| `pnpm start:dev`                   | Start the dev server with hot reload        |
+| `pnpm build`                       | Build to `dist/`                            |
+| `pnpm start:prod`                  | Run the built production bundle             |
+| `pnpm lint`                        | Check & auto-fix ESLint issues              |
+| `pnpm format`                      | Format code with Prettier                   |
+| `pnpm prisma migrate dev`          | Run migrations                              |
+| `pnpm prisma generate`             | Regenerate the Prisma Client                |
+| `pnpm prisma studio`               | Open the data browser/editor UI             |
+| `pnpm exec tsx src/prisma/seed.ts` | Seed permissions, default roles, and cities |
 
 > `pnpm test` isn't fully configured yet since the `*.spec.ts` files were temporarily removed — will be added back once unit tests are written.
 
