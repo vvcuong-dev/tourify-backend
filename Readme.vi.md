@@ -126,7 +126,7 @@ pnpm prisma db push
 # 4. (tuỳ chọn) Generate lại Prisma Client
 pnpm prisma generate
 
-# 5. Seed dữ liệu ban đầu (permissions, roles mặc định, cities)
+# 5. Seed dữ liệu ban đầu (permission, role mặc định, tỉnh/thành)
 pnpm exec tsx src/prisma/seed.ts
 
 # 6. Khởi chạy dev server (hot reload)
@@ -228,7 +228,7 @@ pnpm prisma migrate dev --name <ten_migration>
 
 ## 📡 API Endpoints
 
-Tổng cộng **40 endpoints**, chia làm khu vực **Admin** (`/admin/...`, yêu cầu JWT) và **Public** (không có prefix `/admin`, phục vụ khách vãng lai).
+Tổng cộng **41 endpoints**, chia làm khu vực **Admin** (`/admin/...`, yêu cầu JWT) và **Public** (không có prefix `/admin`, phục vụ khách vãng lai).
 
 > **Base URL:** `http://localhost:3000/api` — các path bên dưới đều là path tương đối so với base này (vd `/admin/auth/login` → `http://localhost:3000/api/admin/auth/login`).
 
@@ -245,18 +245,19 @@ Tổng cộng **40 endpoints**, chia làm khu vực **Admin** (`/admin/...`, yê
 | PATCH  | `/admin/auth/change-password` | Auth   | Đổi mật khẩu                                                     |
 | PATCH  | `/admin/auth/change-email`    | Auth   | Đổi email                                                        |
 
-### Users (`/admin/users`) — Auth — 8 endpoints
+### Users (`/admin/users`) — Auth — 9 endpoints
 
-| Method | Endpoint               | Mô tả                                         |
-| ------ | ---------------------- | --------------------------------------------- |
-| GET    | `/admin/users/profile` | Lấy profile của chính mình                    |
-| PATCH  | `/admin/users/profile` | Cập nhật profile của chính mình               |
-| POST   | `/admin/users/avatar`  | Đổi avatar của chính mình (upload Cloudinary) |
-| GET    | `/admin/users`         | Danh sách người dùng (phân trang, lọc)        |
-| GET    | `/admin/users/:id`     | Chi tiết người dùng                           |
-| POST   | `/admin/users`         | Tạo người dùng mới                            |
-| PATCH  | `/admin/users/:id`     | Cập nhật người dùng                           |
-| DELETE | `/admin/users/:id`     | Xoá mềm người dùng                            |
+| Method | Endpoint                | Mô tả                                         |
+| ------ | ----------------------- | --------------------------------------------- |
+| GET    | `/admin/users/profile`  | Lấy profile của chính mình                    |
+| PATCH  | `/admin/users/profile`  | Cập nhật profile của chính mình               |
+| POST   | `/admin/users/avatar`   | Đổi avatar của chính mình (upload Cloudinary) |
+| GET    | `/admin/users`          | Danh sách người dùng (phân trang, lọc)        |
+| GET    | `/admin/users/:id`      | Chi tiết người dùng                           |
+| POST   | `/admin/users`          | Tạo người dùng mới                            |
+| PATCH  | `/admin/users/:id`      | Cập nhật người dùng                           |
+| PATCH  | `/admin/users/:id/role` | Gán role cho người dùng                       |
+| DELETE | `/admin/users/:id`      | Xoá mềm người dùng                            |
 
 ### Roles (`/admin/roles`) — Auth — 6 endpoints
 

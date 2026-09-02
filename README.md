@@ -228,7 +228,7 @@ pnpm prisma migrate dev --name <migration_name>
 
 ## 📡 API Endpoints
 
-**40 endpoints** in total, split between the **Admin** area (`/admin/...`, JWT required) and **Public** area (no `/admin` prefix, serves anonymous visitors).
+**41 endpoints** in total, split between the **Admin** area (`/admin/...`, JWT required) and **Public** area (no `/admin` prefix, serves anonymous visitors).
 
 > **Base URL:** `http://localhost:3000/api` — all paths below are relative to this base (e.g. `/admin/auth/login` → `http://localhost:3000/api/admin/auth/login`).
 
@@ -245,18 +245,19 @@ pnpm prisma migrate dev --name <migration_name>
 | PATCH  | `/admin/auth/change-password` | Auth   | Change password                                                   |
 | PATCH  | `/admin/auth/change-email`    | Auth   | Change email                                                      |
 
-### Users (`/admin/users`) — Auth — 8 endpoints
+### Users (`/admin/users`) — Auth — 9 endpoints
 
-| Method | Endpoint               | Description                           |
-| ------ | ---------------------- | ------------------------------------- |
-| GET    | `/admin/users/profile` | Get own profile                       |
-| PATCH  | `/admin/users/profile` | Update own profile                    |
-| POST   | `/admin/users/avatar`  | Change own avatar (Cloudinary upload) |
-| GET    | `/admin/users`         | List users (paginated, filterable)    |
-| GET    | `/admin/users/:id`     | Get user details                      |
-| POST   | `/admin/users`         | Create a new user                     |
-| PATCH  | `/admin/users/:id`     | Update a user                         |
-| DELETE | `/admin/users/:id`     | Soft-delete a user                    |
+| Method | Endpoint                | Description                           |
+| ------ | ----------------------- | ------------------------------------- |
+| GET    | `/admin/users/profile`  | Get own profile                       |
+| PATCH  | `/admin/users/profile`  | Update own profile                    |
+| POST   | `/admin/users/avatar`   | Change own avatar (Cloudinary upload) |
+| GET    | `/admin/users`          | List users (paginated, filterable)    |
+| GET    | `/admin/users/:id`      | Get user details                      |
+| POST   | `/admin/users`          | Create a new user                     |
+| PATCH  | `/admin/users/:id`      | Update a user                         |
+| PATCH  | `/admin/users/:id/role` | Assign a role to a user               |
+| DELETE | `/admin/users/:id`      | Soft-delete a user                    |
 
 ### Roles (`/admin/roles`) — Auth — 6 endpoints
 
