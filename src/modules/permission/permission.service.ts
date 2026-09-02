@@ -2,6 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PermissionOperator } from '../../constants/permission.constant';
+import { PermissionResponse } from './responses/permission.response';
 
 @Injectable()
 export class PermissionService {
@@ -14,6 +15,13 @@ export class PermissionService {
       include: { permission: true },
     });
     return rolePermissions.map((rp) => rp.permission.code);
+  }
+
+  async findAll(): Promise<PermissionResponse[]> {
+    const permissions = await this.prisma.permission.findMany({
+      orderBy: [{ group: 'asc' }, { name: 'asc' }],
+    });
+    return permissions.map((p) => new PermissionResponse(p));
   }
 
   async verify(

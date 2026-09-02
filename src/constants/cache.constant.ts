@@ -72,6 +72,8 @@ export const CACHE = {
         `${PREFIX}:${GLOBAL_VER}:auth:${CACHE.AUTH._VER}:refresh:id_${userId}:jti_${jti}`,
       BLACKLIST: (jti: string) =>
         `${PREFIX}:${GLOBAL_VER}:auth:${CACHE.AUTH._VER}:blacklist:jti_${jti}`,
+      RESET_PASSWORD: (token: string) =>
+        `${PREFIX}:${GLOBAL_VER}:auth:${CACHE.AUTH._VER}:reset_password:token_${token}`,
     },
     _PATTERN: {
       ALL_REFRESH_TOKENS: (userId: number) =>
