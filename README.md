@@ -126,7 +126,10 @@ pnpm prisma db push
 # 4. (optional) Regenerate the Prisma Client
 pnpm prisma generate
 
-# 5. Start the dev server (hot reload)
+# 5. Seed initial data (permissions, default roles, cities)
+pnpm exec tsx src/prisma/seed.ts
+
+# 6. Start the dev server (hot reload)
 pnpm start:dev
 ```
 

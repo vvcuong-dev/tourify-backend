@@ -126,7 +126,10 @@ pnpm prisma db push
 # 4. (tuỳ chọn) Generate lại Prisma Client
 pnpm prisma generate
 
-# 5. Khởi chạy dev server (hot reload)
+# 5. Seed dữ liệu ban đầu (permissions, roles mặc định, cities)
+pnpm exec tsx src/prisma/seed.ts
+
+# 6. Khởi chạy dev server (hot reload)
 pnpm start:dev
 ```
 
