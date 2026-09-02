@@ -4,8 +4,13 @@
 
 An online tour booking system that lets customers search and book tours **without needing an account**, while administrators manage all content (tours, categories, orders...) through a JWT-protected area. Built with Node.js 22, NestJS 11, TypeScript, Prisma 7, and MySQL, with ZaloPay payment integration.
 
+## 🎬 Demo Video
+
+[Watch the demo video](https://www.youtube.com/watch?v=MpzR4ZLBjxU) — walkthrough of the RBAC admin flow, tour booking, and ZaloPay payment.
+
 ## 📋 Table of Contents
 
+- [Demo Video](#-demo-video)
 - [Features](#-features)
 - [Tech Stack](#️-tech-stack)
 - [Architecture](#️-architecture)

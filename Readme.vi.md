@@ -4,8 +4,13 @@
 
 Hệ thống đặt tour du lịch trực tuyến, cho phép khách hàng tìm kiếm và đặt tour mà **không cần đăng nhập**, trong khi quản trị viên quản lý toàn bộ nội dung (tour, danh mục, đơn hàng...) qua khu vực có xác thực JWT. Được xây dựng với Node.js 22, NestJS 11, TypeScript, Prisma 7 và MySQL, có tích hợp thanh toán ZaloPay.
 
+## 🎬 Video Demo
+
+[Xem video demo](https://www.youtube.com/watch?v=MpzR4ZLBjxU) — giới thiệu luồng RBAC dành cho admin, đặt tour, và thanh toán ZaloPay.
+
 ## 📋 Mục Lục
 
+- [Video Demo](#-video-demo)
 - [Tính Năng](#-tính-năng)
 - [Tech Stack](#️-tech-stack)
 - [Kiến Trúc](#️-kiến-trúc)
